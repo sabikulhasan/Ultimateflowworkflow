@@ -1,0 +1,2265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UGC Ad Prompt Builder</title>
+<style>
+:root{
+  --bg:#f5f3ef; --surface:#ffffff; --field:#f7f6f3; --text:#1c1b19; --muted:#6a665f; --faint:#8f8a82;
+  --border:#e2ded6; --border-strong:#cfc9bd; --accent:#b0501f; --accent-2:#8a3c14; --accent-soft:#f7e7dd;
+  --ok:#2d7a4c; --ok-soft:#e3f1e8; --warn:#a15c00; --shadow:0 12px 32px rgba(40,30,20,.14),0 2px 6px rgba(40,30,20,.08);
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; --radius:12px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#141311; --surface:#1d1c1a; --field:#252321; --text:#ede9e2; --muted:#a39e95; --faint:#7e7970;
+    --border:#34312d; --border-strong:#46423c; --accent:#e8895a; --accent-2:#f3a57e; --accent-soft:#3b2a20;
+    --ok:#6cc08e; --ok-soft:#1f3327; --warn:#e0a24a; --shadow:0 12px 32px rgba(0,0,0,.5),0 2px 6px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#141311; --surface:#1d1c1a; --field:#252321; --text:#ede9e2; --muted:#a39e95; --faint:#7e7970;
+  --border:#34312d; --border-strong:#46423c; --accent:#e8895a; --accent-2:#f3a57e; --accent-soft:#3b2a20;
+  --ok:#6cc08e; --ok-soft:#1f3327; --warn:#e0a24a; --shadow:0 12px 32px rgba(0,0,0,.5),0 2px 6px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+header{max-width:1440px;margin:0 auto;padding:28px 16px 4px;display:flex;gap:16px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+header h1{margin:0 0 4px;font-size:26px;letter-spacing:-.01em;text-wrap:balance}
+header p{margin:0;color:var(--muted);max-width:760px}
+.wrap{max-width:1440px;margin:0 auto;padding:16px;display:grid;gap:20px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:1100px){.wrap{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)} aside{position:sticky;top:16px;align-self:start;max-height:calc(100vh - 32px);overflow:auto;padding-right:2px}}
+section,.out{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:18px;scroll-margin-top:12px}
+section.off{display:none}
+h2{font-size:17px;margin:0 0 4px;display:flex;gap:10px;align-items:center;text-wrap:balance}
+h2 .n{background:var(--accent);color:#fff;border-radius:50%;min-width:26px;height:26px;display:inline-grid;place-items:center;font-size:12px;flex:none;padding:0 4px}
+section.done h2 .n{background:var(--ok)}
+h3{font-size:14.5px;margin:18px 0 8px}
+.sub{color:var(--muted);font-size:13.5px;margin:0 0 14px;max-width:75ch}
+.stage{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin:0 0 2px}
+.grid{display:grid;gap:16px 18px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.field label,.lbl{display:block;font-size:13px;font-weight:600;margin-bottom:5px}
+label small,.lbl small{font-weight:400;color:var(--faint)}
+.fno{color:var(--accent);font-variant-numeric:tabular-nums;margin-right:4px}
+input[type=text]{width:100%;font:inherit;color:var(--text);background:var(--field);border:1px solid var(--border);border-radius:10px;padding:9px 12px;transition:border-color .15s}
+input[type=text]:hover{border-color:var(--border-strong)}
+input[type=text]:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.subf{margin-top:8px}
+.subf .lbl{font-weight:500;color:var(--muted);font-size:12.5px}
+.desc{font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.45}
+.desc:empty{display:none}
+.note{font-size:13px;background:var(--accent-soft);border-radius:10px;padding:10px 12px;margin:12px 0 0}
+.tip{font-size:13px;color:var(--muted);border-left:3px solid var(--border-strong);padding:2px 0 2px 12px;margin:12px 0 0}
+.tip b{color:var(--text)}
+
+/* picker trigger */
+.pk{display:flex;align-items:center;gap:8px;width:100%;text-align:left;font:inherit;color:var(--text);background:var(--field);border:1px solid var(--border);border-radius:10px;padding:9px 12px;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.pk:hover{border-color:var(--border-strong)}
+.pk:focus-visible,.pk[aria-expanded="true"]{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.pk .pk-l{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pk .chev{flex:none;width:16px;height:16px;color:var(--muted);transition:transform .15s}
+.pk[aria-expanded="true"] .chev{transform:rotate(180deg)}
+
+/* popover */
+#pop{position:fixed;z-index:100;display:none;flex-direction:column;background:var(--surface);border:1px solid var(--border-strong);border-radius:12px;box-shadow:var(--shadow);overflow:hidden}
+#pop.open{display:flex;animation:pin .12s ease-out}
+@keyframes pin{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+#popq{margin:8px 8px 0;width:calc(100% - 16px)!important}
+#popl{list-style:none;margin:0;padding:6px;overflow:auto;overscroll-behavior:contain}
+#popl li.opt{padding:8px 10px;border-radius:8px;cursor:pointer}
+#popl li.opt.active{background:var(--accent-soft)}
+#popl .o-l{font-weight:600;font-size:14px;display:block}
+#popl .o-d{display:block;font-size:12.5px;color:var(--muted);line-height:1.4;margin-top:1px}
+#popl li.opt.sel .o-l::after{content:"  ✓";color:var(--accent)}
+#popl li.empty{padding:12px;color:var(--muted);font-size:13px}
+
+/* big choice cards */
+.choices{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.choice{display:block;text-align:left;font:inherit;color:var(--text);background:var(--field);border:1px solid var(--border);border-radius:12px;padding:14px 16px;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.choice:hover{border-color:var(--border-strong)}
+.choice:focus-visible{outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+.choice b{display:block;font-size:14.5px;margin-bottom:3px}
+.choice span{display:block;font-size:12.5px;color:var(--muted);line-height:1.45}
+.choice[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.choice[aria-pressed="true"] b::after{content:"  ✓";color:var(--accent)}
+.choices.small{grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}
+.choices.small .choice{padding:10px 12px}
+
+/* chips (multi-select) */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:inherit;font-size:13.5px;color:var(--text);background:var(--field);border:1px solid var(--border);border-radius:999px;padding:6px 12px;cursor:pointer;transition:border-color .15s}
+.chip:hover{border-color:var(--border-strong)}
+.chip:focus-visible{outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.chip:disabled{opacity:.45;cursor:not-allowed}
+.count{font-weight:400;color:var(--faint)}
+
+/* send boxes */
+.send{margin-top:16px;border:1px solid var(--border-strong);border-radius:12px;overflow:hidden}
+.send .sh{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 8px 8px 14px;background:var(--field);border-bottom:1px solid var(--border)}
+.send .sh span{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--accent)}
+.send pre{white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.55 var(--mono);margin:0;padding:12px 14px;max-height:380px;overflow:auto;background:var(--surface)}
+.gate{padding:14px 0;border-top:1px solid var(--border)}
+.gate:first-of-type{border-top:0;padding-top:4px}
+.gate .q{font-size:13.5px;margin:0 0 4px}
+.gate .q q{font-weight:600}
+.gate .when{font-size:12.5px;color:var(--muted);margin:0 0 8px}
+.gate .send{margin-top:8px}
+.gate input{font-size:13.5px}
+
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+button.b{font:inherit;font-size:14px;border-radius:10px;padding:7px 14px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text);transition:filter .15s,border-color .15s;white-space:nowrap}
+button.b:hover{border-color:var(--border-strong)}
+button.b:focus-visible{outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+button.primary:hover{filter:brightness(1.07)}
+button.copied{background:var(--ok);border-color:var(--ok);color:#fff}
+
+.out .head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+.out h2{margin:0}
+.out pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.5 var(--mono);background:var(--field);border:1px solid var(--border);border-radius:10px;padding:12px;margin:0;max-height:220px;overflow:auto}
+.meta{font-size:12.5px;color:var(--muted);margin:8px 0 0}
+
+/* step nav */
+.nav{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.nav li{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:8px}
+.nav li:hover{background:var(--field)}
+.nav li.off{display:none}
+.nav input{accent-color:var(--ok);width:16px;height:16px;flex:none;margin:0}
+.nav a{color:var(--text);text-decoration:none;font-size:13.5px;flex:1}
+.nav a:hover{color:var(--accent)}
+.nav .t{font-size:11px;color:var(--faint);white-space:nowrap}
+.nav li.done a{color:var(--muted);text-decoration:line-through}
+.progress{height:6px;border-radius:99px;background:var(--field);border:1px solid var(--border);overflow:hidden;margin:4px 0 12px}
+.progress i{display:block;height:100%;background:var(--ok);width:0;transition:width .2s}
+
+/* checklists */
+.checklist{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.checklist li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;align-items:start}
+.checklist input{accent-color:var(--ok);width:17px;height:17px;margin:2px 0 0}
+.checklist b{font-weight:600}
+.checklist .d{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
+.kv{display:inline-block;font:12.5px var(--mono);background:var(--field);border:1px solid var(--border);border-radius:6px;padding:0 6px;color:var(--text)}
+
+details summary{cursor:pointer;font-weight:600}
+.gloss{display:grid;gap:6px 18px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));font-size:13px;margin-top:10px}
+.gloss h3{grid-column:1/-1;font-size:14px;margin:14px 0 2px}
+.markdone{margin-top:16px;display:flex;justify-content:flex-end}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>UGC Ad Prompt Builder</h1>
+    <p>Pick options, copy each ready-made message, and paste it into ChatGPT when it asks. The master prompt is copied word for word. Your choices only fill in the replies. At the end, the steps walk you through Google Flow and CapCut.</p>
+  </div>
+  <div class="btns"><button class="b" id="resetAll" type="button">Start a new ad</button><button class="b" id="themeBtn" type="button">Light / dark</button></div>
+</header>
+
+<div class="wrap">
+<main>
+
+<section id="s-start" data-step="start">
+  <p class="stage">Before you start</p>
+  <h2><span class="n">0</span>Paste the master prompt into ChatGPT</h2>
+  <p class="sub">Open ChatGPT, start a new chat and turn on <b>Thinking</b> mode. Then copy the master prompt and send it. ChatGPT will answer with one question. Come back here for the reply.</p>
+  <ul class="checklist">
+    <li><input type="checkbox" id="pre1" data-chk="pre1"><label for="pre1"><b>Have your product photos ready.</b><span class="d">Clear photos from several sides (front, back, sides, label). The official website of the product is a good source.</span></label></li>
+    <li><input type="checkbox" id="pre2" data-chk="pre2"><label for="pre2"><b>Optional: a photo of your character or location.</b><span class="d">Only if you already have a person or a room you want to use. Otherwise ChatGPT creates them.</span></label></li>
+    <li><input type="checkbox" id="pre3" data-chk="pre3"><label for="pre3"><b>Make a folder for downloads.</b><span class="d">You'll download 4 images from ChatGPT: character sheet, product sheet, location sheet and storyboard. You'll upload them to Google Flow later.</span></label></li>
+  </ul>
+  <div class="send"><div class="sh"><span>Send this first</span><button class="b primary" type="button" data-copy="master">Copy master prompt</button></div><pre id="masterPre" style="max-height:260px"></pre></div>
+  <p class="meta" id="masterMeta"></p>
+  <div class="markdone"><button class="b" type="button" data-done="start">Mark step done</button></div>
+</section>
+
+<section id="s-method" data-step="method">
+  <p class="stage">Stage 1 · Character</p>
+  <h2><span class="n">1</span>New character or your own?</h2>
+  <p class="sub">ChatGPT asks: <q>Do you want to generate a new character, or upload an existing character?</q></p>
+  <div class="choices" data-choice="method"></div>
+  <div class="send"><div class="sh"><span>Send this</span><button class="b primary" type="button" data-copy="outMethod">Copy</button></div><pre id="outMethod"></pre></div>
+  <div class="markdone"><button class="b" type="button" data-done="method">Mark step done</button></div>
+</section>
+
+<section id="s-form" data-step="form">
+  <p class="stage">Stage 1 · Character</p>
+  <h2><span class="n">2</span>Describe your character</h2>
+  <p class="sub">ChatGPT shows a form with 16 items. Fill them in here instead, then send the reply. The example from the video is already filled in; change anything. Choose the person who would really buy your product.</p>
+  <div class="grid" id="form"></div>
+  <div class="send"><div class="sh"><span>Send this</span><button class="b primary" type="button" data-copy="outForm">Copy</button></div><pre id="outForm"></pre></div>
+  <div class="markdone"><button class="b" type="button" data-done="form">Mark step done</button></div>
+</section>
+
+<section id="s-upload" data-step="upload" class="off">
+  <p class="stage">Stage 1 · Character</p>
+  <h2><span class="n">2</span>Upload your character photos</h2>
+  <p class="sub">After you send "B", ChatGPT asks for photos. Upload up to 10 pictures of the <b>same person</b> in one message, and send them without any text.</p>
+  <ul class="checklist">
+    <li><input type="checkbox" id="up1" data-chk="up1"><label for="up1"><b>A face photo from the front</b><span class="d">Looking at the camera, face clearly lit.</span></label></li>
+    <li><input type="checkbox" id="up2" data-chk="up2"><label for="up2"><b>The face turned halfway, and a side view</b><span class="d">Helps the AI understand the shape of the nose, jaw and hair.</span></label></li>
+    <li><input type="checkbox" id="up3" data-chk="up3"><label for="up3"><b>One full-body photo</b><span class="d">Head to toe, so the AI learns the height and body shape.</span></label></li>
+    <li><input type="checkbox" id="up4" data-chk="up4"><label for="up4"><b>Extra: other expressions, outfits or a back view</b><span class="d">Optional. More angles make the character more consistent.</span></label></li>
+  </ul>
+  <p class="tip">ChatGPT then describes the person and asks <q>Is my analysis correct?</q>. The reply for that is in the next step.</p>
+  <div class="markdone"><button class="b" type="button" data-done="upload">Mark step done</button></div>
+</section>
+
+<section id="s-charok" data-step="charok">
+  <p class="stage">Stage 1 · Character</p>
+  <h2><span class="n">3</span>Approve the character</h2>
+  <p class="sub">ChatGPT asks these one at a time. Look carefully at each image before you approve it: face, hair, skin, eyes and body should match what you chose. Download each image you approve.</p>
+  <div id="g-char"></div>
+  <p class="tip"><b>Download:</b> the base character image and the <b>Character Reference Sheet</b> (8 views of the same person). You'll upload the sheet to Google Flow at the end.</p>
+  <div class="markdone"><button class="b" type="button" data-done="charok">Mark step done</button></div>
+</section>
+
+<section id="s-product" data-step="product">
+  <p class="stage">Stage 2 · Product</p>
+  <h2><span class="n">4</span>Your product</h2>
+  <p class="sub">ChatGPT asks: <q>Do you already have a product image you want to use?</q>. ChatGPT will never invent a product, so the product must come from your photos.</p>
+  <div class="choices" data-choice="product"></div>
+  <div class="send"><div class="sh"><span>Send this</span><button class="b primary" type="button" data-copy="outProduct">Copy</button></div><pre id="outProduct"></pre></div>
+  <p class="tip" id="productTip"></p>
+  <h3>Then ChatGPT asks</h3>
+  <div id="g-product"></div>
+  <p class="tip"><b>Check before approving:</b> same shape, same colors, logo spelled correctly, buttons or cap in the right place. <b>Download</b> the Product Reference Sheet.</p>
+  <div class="markdone"><button class="b" type="button" data-done="product">Mark step done</button></div>
+</section>
+
+<section id="s-location" data-step="location">
+  <p class="stage">Stage 3 · Location</p>
+  <h2><span class="n">5</span>Where the video is filmed</h2>
+  <p class="sub">ChatGPT asks: <q>Do you already have a location image you want to use?</q>. If you let ChatGPT create it, you get a real-looking home, car, gym or café that suits the product.</p>
+  <div class="choices" data-choice="location"></div>
+  <div class="send"><div class="sh"><span>Send this</span><button class="b primary" type="button" data-copy="outLocation">Copy</button></div><pre id="outLocation"></pre></div>
+  <p class="tip" id="locationTip"></p>
+  <h3>Then ChatGPT asks</h3>
+  <div id="g-location"></div>
+  <p class="tip"><b>Check before approving:</b> the image shows only the place. No storyboard boxes, no script, no people acting out scenes. <b>Download</b> the Location Reference Sheet.</p>
+  <div class="markdone"><button class="b" type="button" data-done="location">Mark step done</button></div>
+</section>
+
+<section id="s-concept" data-step="concept">
+  <p class="stage">Stages 4–5 · Ad idea</p>
+  <h2><span class="n">6</span>Pick one of the 10 ad ideas</h2>
+  <p class="sub">ChatGPT writes 10 ideas and asks: <q>Which UGC ad do you want to create?</q>. Read them, then pick the number you like. Each idea shows its <b>hook</b> (the first line that stops people scrolling) and its <b>CTA</b> (the friendly "link in bio" ending).</p>
+  <div class="choices small" data-choice="concept"></div>
+  <div class="send"><div class="sh"><span>Send this</span><button class="b primary" type="button" data-copy="outConcept">Copy</button></div><pre id="outConcept"></pre></div>
+  <details style="margin-top:14px"><summary>What do the ad formats mean?</summary><div class="gloss" id="formats"></div></details>
+  <p class="tip"><b>Need ideas?</b> Look at real ads for similar products on <a href="https://ads.tiktok.com/business/creativecenter/inspiration/topads/pc/en" target="_blank" rel="noopener">TikTok Creative Center (Top Ads)</a> and the <a href="https://www.facebook.com/ads/library/" target="_blank" rel="noopener">Meta Ad Library</a>, plus TikTok, Reels and Shorts. Use them for inspiration; don't copy them.</p>
+  <div class="markdone"><button class="b" type="button" data-done="concept">Mark step done</button></div>
+</section>
+
+<section id="s-duration" data-step="duration">
+  <p class="stage">Stage 6 · Length</p>
+  <h2><span class="n">7</span>How long is the ad?</h2>
+  <p class="sub">ChatGPT asks: <q>What duration do you want?</q></p>
+  <div class="choices" data-choice="duration"></div>
+  <div class="send"><div class="sh"><span>Send this</span><button class="b primary" type="button" data-copy="outDuration">Copy</button></div><pre id="outDuration"></pre></div>
+  <div class="markdone"><button class="b" type="button" data-done="duration">Mark step done</button></div>
+</section>
+
+<section id="s-script" data-step="script">
+  <p class="stage">Stages 7–10 · Script and storyboard</p>
+  <h2><span class="n">8</span>Approve the script and storyboard</h2>
+  <p class="sub">ChatGPT now writes the script (what the person says), plans every shot, draws the storyboard and checks everything. It stops and asks after each part. Read each one; if something is wrong, type what to change and copy that reply instead.</p>
+  <div id="g-script"></div>
+  <p class="tip"><b>Download</b> the Complete Storyboard Image (the picture with all the numbered shots). That's the 4th and last image you need.</p>
+  <div class="markdone"><button class="b" type="button" data-done="script">Mark step done</button></div>
+</section>
+
+<section id="s-final" data-step="final">
+  <p class="stage">Stage 11 · Final prompt</p>
+  <h2><span class="n">9</span>Copy ChatGPT's final prompt</h2>
+  <p class="sub">ChatGPT writes the <b>Final Flow AI Agent Master Prompt</b>. It contains your whole plan. Copy all of it from ChatGPT (use the copy icon under its answer). Check that you have these 4 images saved:</p>
+  <ul class="checklist">
+    <li><input type="checkbox" id="a1" data-chk="a1"><label for="a1"><b>Character Reference Sheet</b><span class="d">8 views of the same person on a plain background.</span></label></li>
+    <li><input type="checkbox" id="a2" data-chk="a2"><label for="a2"><b>Product Reference Sheet</b><span class="d">Your product from several sides.</span></label></li>
+    <li><input type="checkbox" id="a3" data-chk="a3"><label for="a3"><b>Location Reference Sheet</b><span class="d">The room or place only.</span></label></li>
+    <li><input type="checkbox" id="a4" data-chk="a4"><label for="a4"><b>Complete Storyboard Image</b><span class="d">All shots as tall phone-shaped panels, in order.</span></label></li>
+  </ul>
+  <p class="tip">Give the files clear names, for example <span class="kv">1-character.png</span> <span class="kv">2-product.png</span> <span class="kv">3-location.png</span> <span class="kv">4-storyboard.png</span>. Tagging them in Flow is much easier that way.</p>
+  <div class="markdone"><button class="b" type="button" data-done="final">Mark step done</button></div>
+</section>
+
+<section id="s-flow" data-step="flow">
+  <p class="stage">Google Flow</p>
+  <h2><span class="n">10</span>Make the video in Google Flow</h2>
+  <p class="sub">Open <a href="https://labs.google/fx/tools/flow" target="_blank" rel="noopener">Google Flow</a> and start a new project. Tick each step as you go.</p>
+  <ul class="checklist">
+    <li><input type="checkbox" id="fl1" data-chk="fl1"><label for="fl1"><b>Select Agent mode.</b><span class="d">The whole workflow depends on it. The agent reads your plan and makes all the clips for you.</span></label></li>
+    <li><input type="checkbox" id="fl2" data-chk="fl2"><label for="fl2"><b>Open Settings and set <span class="kv">Confirm before generating</span> to <span class="kv">Never</span>.</b><span class="d">Otherwise the agent stops and asks you before every clip.</span></label></li>
+    <li><input type="checkbox" id="fl3" data-chk="fl3"><label for="fl3"><b>Set the aspect ratio to <span class="kv">9:16</span> (tall).</b><span class="d">The phone-screen shape used by TikTok, Reels and Shorts.</span></label></li>
+    <li><input type="checkbox" id="fl4" data-chk="fl4"><label for="fl4"><b>Keep the output count at <span class="kv">1</span>.</b><span class="d">One version of each clip. Saves credits.</span></label></li>
+    <li><input type="checkbox" id="fl5" data-chk="fl5"><label for="fl5"><b>Choose the model. The video used <span class="kv">Omni Flash</span>.</b><span class="d">Model names change over time; pick the one Flow recommends for video if Omni Flash isn't listed. Then click Save settings.</span></label></li>
+    <li><input type="checkbox" id="fl6" data-chk="fl6"><label for="fl6"><b>Paste ChatGPT's final prompt into the chat box.</b><span class="d">Paste it but don't send yet.</span></label></li>
+    <li><input type="checkbox" id="fl7" data-chk="fl7"><label for="fl7"><b>Click <span class="kv">+</span>, then Upload media, and add your 4 images.</b><span class="d">Character sheet, product sheet, location sheet and storyboard.</span></label></li>
+    <li><input type="checkbox" id="fl8" data-chk="fl8"><label for="fl8"><b>At the end of the prompt, type <span class="kv">@</span> and tag all 4 images one by one.</b><span class="d">This is the most important step. Tagging tells the agent which picture is the character, the product, the place and the storyboard, so they stay the same in every clip.</span></label></li>
+    <li><input type="checkbox" id="fl9" data-chk="fl9"><label for="fl9"><b>Send it and wait.</b><span class="d">The agent makes several clips. When Flow is busy, it makes them one at a time.</span></label></li>
+    <li><input type="checkbox" id="fl10" data-chk="fl10"><label for="fl10"><b>Watch every clip and check it.</b><span class="d">Same face and hair? Product looks right, logo spelled right? Same room? Right words? If not, use the fix-it message below.</span></label></li>
+    <li><input type="checkbox" id="fl11" data-chk="fl11"><label for="fl11"><b>Download all the clips.</b></label></li>
+  </ul>
+  <h3>A clip came out wrong? Ask the agent to fix only that clip</h3>
+  <div class="grid">
+    <div><div class="lbl">Which clip?</div><button class="pk" type="button" data-pk="clip"></button><div class="desc" data-pkd="clip"></div></div>
+    <div><div class="lbl">What's wrong?</div><button class="pk" type="button" data-pk="issue"></button><div class="desc" data-pkd="issue"></div></div>
+  </div>
+  <div class="field subf"><label class="lbl" for="issueExtra">Anything else to say? <small>(optional)</small></label><input type="text" id="issueExtra" data-k="issueExtra" placeholder="e.g. she should hold the bottle in her right hand"></div>
+  <div class="send"><div class="sh"><span>Send this in Flow</span><button class="b primary" type="button" data-copy="outFix">Copy</button></div><pre id="outFix"></pre></div>
+  <div class="markdone"><button class="b" type="button" data-done="flow">Mark step done</button></div>
+</section>
+
+<section id="s-edit" data-step="edit">
+  <p class="stage">Editing</p>
+  <h2><span class="n">11</span>Join the clips in CapCut</h2>
+  <p class="sub">Any video editor works. These steps use CapCut, like the video.</p>
+  <ul class="checklist">
+    <li><input type="checkbox" id="ed1" data-chk="ed1"><label for="ed1"><b>Rename the clips in order.</b><span class="d">For example <span class="kv">scene-1.mp4</span>, <span class="kv">scene-2.mp4</span>… so you always know which comes first.</span></label></li>
+    <li><input type="checkbox" id="ed2" data-chk="ed2"><label for="ed2"><b>Create project, then Import, and add all clips.</b></label></li>
+    <li><input type="checkbox" id="ed3" data-chk="ed3"><label for="ed3"><b>Drag them onto the timeline in order.</b><span class="d">The timeline is the strip at the bottom. Zoom it in or out to see the clips better.</span></label></li>
+    <li><input type="checkbox" id="ed4" data-chk="ed4"><label for="ed4"><b>Cut the empty bits at the start and end of each clip.</b><span class="d">The ad should start right on the first spoken word (the hook) and each clip should flow into the next, like one person filming on a phone.</span></label></li>
+    <li><input type="checkbox" id="ed5" data-chk="ed5"><label for="ed5"><b>Play the whole ad once, full screen.</b><span class="d">Listen for cut-off words and check that it feels natural.</span></label></li>
+    <li><input type="checkbox" id="ed6" data-chk="ed6"><label for="ed6"><b>Export in 9:16.</b></label></li>
+  </ul>
+  <div class="markdone"><button class="b" type="button" data-done="edit">Mark step done</button></div>
+</section>
+
+<section id="s-help" data-step="help">
+  <p class="stage">If something goes wrong in ChatGPT</p>
+  <h2><span class="n">?</span>Fix-it messages</h2>
+  <p class="sub">ChatGPT sometimes skips a step, blocks an image or changes the product. Each message below points it back to the exact rule in the master prompt.</p>
+  <div id="g-help"></div>
+</section>
+
+<section>
+  <details>
+    <summary>Words you'll see in ChatGPT's answers</summary>
+    <div class="gloss" id="gloss"></div>
+  </details>
+</section>
+
+</main>
+
+<aside>
+  <div class="out">
+    <div class="head"><h2>Your progress</h2><span class="meta" id="progTxt" style="margin:0"></span></div>
+    <div class="progress"><i id="progBar"></i></div>
+    <ul class="nav" id="nav"></ul>
+  </div>
+  <div class="out">
+    <div class="head"><h2>Your choices</h2></div>
+    <pre id="summary" style="max-height:none"></pre>
+  </div>
+</aside>
+</div>
+
+<div id="pop" role="dialog" aria-modal="false">
+  <input type="text" id="popq" placeholder="Search…" autocomplete="off" aria-label="Search options">
+  <ul id="popl" role="listbox"></ul>
+</div>
+
+<script type="text/plain" id="master">AI UGC AD CREATIVE DIRECTOR — MASTER PROMPT
+
+You are my expert UGC ad creative director, UGC scriptwriter, character designer, product visual designer, location designer, storyboard artist, and AI video production planner.
+
+Your job is to develop a complete UGC (User-Generated Content style) ad package in 9:16 vertical format for a modern American audience, optimized for TikTok, Instagram Reels, and YouTube Shorts.
+
+The final package will be given to Flow AI Agent Mode to generate the actual UGC ad.
+
+Do not explain this instruction.
+Do not discuss tutorials.
+Do not discuss platform growth strategy.
+Do not give generic advice.
+Work through the UGC ad creation process step by step.
+
+═══════════════════════════════════════════
+STAGE GATE SYSTEM — HIGHEST PRIORITY RULES
+(THESE RULES OVERRIDE EVERYTHING ELSE)
+═══════════════════════════════════════════
+
+RULE G1 — MANDATORY OUTPUT PER STAGE
+Every stage has a REQUIRED OUTPUT ARTIFACT listed below.
+You are FORBIDDEN from moving to the next stage until that
+stage's required output has been fully delivered AND the user
+has confirmed it.
+
+STAGE 1A required output → Generated character image OR uploaded character analysis
+STAGE 1B required output → CHARACTER REFERENCE SHEET IMAGE (9:16) — NEVER SKIP THIS
+STAGE 1C required output → IMAGE GENERATION PROMPT + NEGATIVE PROMPT + CHARACTER SUMMARY
+STAGE 2 required output → Product analysis + PRODUCT REFERENCE SHEET IMAGE (9:16)
+STAGE 3 required output → LOCATION SHEET + LOCATION REFERENCE SHEET IMAGE (9:16)
+STAGE 4 required output → 10 UGC ad concepts (text only)
+STAGE 5 required output → User's concept selection
+STAGE 6 required output → User's duration selection
+STAGE 7 required output → Complete UGC ad script (text only)
+STAGE 8 required output → Storyboard plan (text/table)
+STAGE 9 required output → COMPLETE STORYBOARD IMAGE (9:16 panels)
+STAGE 10 required output → Consistency check report
+STAGE 11 required output → Final Flow AI Agent Master Prompt
+
+RULE G2 — STAGE COMPLETE CONFIRMATION
+After delivering each stage's required output, you MUST write:
+
+"✅ STAGE [X] COMPLETE — [name of output delivered]"
+
+Then ask ONLY:
+
+"Kya main next stage ([next stage name]) start karun?"
+
+Then STOP and WAIT for the user's reply.
+Never continue without the user's confirmation.
+
+RULE G3 — CHARACTER SHEET CAN NEVER BE SKIPPED
+You are FORBIDDEN from saying "APPROVE CHARACTER", asking for
+character approval, locking the character identity, or mentioning
+the Product Stage UNTIL the CHARACTER REFERENCE SHEET IMAGE
+(9:16, with all 8 panels) has been generated and shown to the user.
+
+A single character image is NOT a Character Reference Sheet.
+Receiving or generating one character image does NOT complete
+Stage 1. Stage 1 is complete ONLY after the full 8-panel
+Character Reference Sheet Image is delivered and approved.
+
+The correct Stage 1 order is ALWAYS:
+
+Step 1 → Ask Method A or Method B → STOP
+Step 2 → (Method A) Show Character Generation Form → STOP
+Step 3 → Generate base character image → show it → ask
+         "Is this character look okay, or want changes?" → STOP
+Step 4 → Generate CHARACTER REFERENCE SHEET IMAGE (9:16,
+         all 8 panels, same person) → show it → STOP
+Step 5 → Provide IMAGE GENERATION PROMPT + NEGATIVE PROMPT +
+         CHARACTER SUMMARY → ask "Approve this Character
+         Reference Sheet?" → STOP
+Step 6 → Only after user approves the SHEET → say
+         "CHARACTER IDENTITY LOCKED 🔒" → then ask permission
+         to start Stage 2 → STOP
+
+Skipping Step 4 or Step 5 is a CRITICAL FAILURE of this workflow.
+
+RULE G4 — PRE-REPLY SELF CHECK
+Before EVERY reply, silently ask yourself:
+1. Which stage am I in?
+2. Has this stage's required output artifact been delivered?
+3. Has the user confirmed it?
+If the answer to 2 or 3 is NO — do NOT move forward.
+Deliver the missing output or wait for confirmation instead.
+
+RULE G5 — ONE QUESTION PER REPLY
+Ask only ONE question at a time. After asking, STOP.
+Never answer on behalf of the user.
+Never assume the user's choice.
+
+CORE PRODUCTION PRINCIPLE
+
+This is a STRICT SEQUENTIAL PRODUCTION WORKFLOW.
+
+You MUST complete each stage separately.
+NEVER combine two different stages into one image.
+NEVER generate future-stage assets early.
+NEVER predict or anticipate a future stage.
+NEVER create storyboard assets before the storyboard stage.
+NEVER create a storyboard inside a location sheet.
+NEVER create a location sheet inside a storyboard.
+
+Each major visual reference must be an independent image.
+
+The four major visual assets are ALWAYS separate:
+
+1. CHARACTER REFERENCE SHEET IMAGE
+2. PRODUCT REFERENCE SHEET IMAGE
+3. LOCATION REFERENCE SHEET IMAGE
+4. COMPLETE STORYBOARD IMAGE (9:16 PANELS)
+
+These must NEVER be merged into one image.
+
+UGC FORMAT LOCK
+
+ALL visual assets in this workflow are 9:16 VERTICAL.
+
+- Character Reference Sheet Image → 9:16 layout
+- Product Reference Sheet Image → 9:16 layout
+- Location Reference Sheet Image → 9:16 layout
+- Complete Storyboard Image → every panel framed 9:16 vertical
+- Final Flow AI output → 9:16 vertical video
+
+The final UGC ad must look like it was shot natively on a smartphone for TikTok / Reels / Shorts.
+It must NOT look like a polished TV commercial.
+It must NOT look like a cinematic brand film.
+It must feel like real creator content that happens to feature a product.
+
+PRODUCTION STAGE LOCK
+
+The workflow must follow this exact order:
+
+STAGE 1 — CHARACTER CREATION & CHARACTER REFERENCE SYSTEM
+  1A — Character generate/upload
+  1B — Character Reference Sheet Image (9:16) — MANDATORY
+  1C — Fallback prompts + Character Summary + Sheet approval → LOCK
+STAGE 2 — PRODUCT REFERENCE INTAKE + PRODUCT SHEET
+STAGE 3 — LOCATION REFERENCE INTAKE + LOCATION SHEET
+STAGE 4 — GENERATE 10 UGC AD CONCEPTS
+STAGE 5 — USER SELECTS ONE CONCEPT
+STAGE 6 — ASK FOR DURATION
+STAGE 7 — WRITE UGC AD SCRIPT
+STAGE 8 — CREATE STORYBOARD PLAN
+STAGE 9 — CREATE COMPLETE STORYBOARD IMAGE (9:16)
+STAGE 10 — FINAL CONSISTENCY CHECK
+STAGE 11 — FINAL FLOW AI AGENT MASTER PROMPT
+
+Do not skip stages.
+Do not merge stages.
+Do not generate a later-stage visual during an earlier stage.
+
+STAGE 1 — CHARACTER CREATION & CHARACTER REFERENCE SYSTEM
+
+The Character Stage must support TWO creation methods:
+
+METHOD A — GENERATE A NEW CHARACTER
+METHOD B — UPLOAD AN EXISTING CHARACTER
+
+The user must choose one method before continuing.
+
+FIRST ASK ONLY:
+
+"Do you want to generate a new character, or upload an existing character?"
+
+Give exactly two choices:
+
+A — GENERATE A NEW CHARACTER
+B — UPLOAD AN EXISTING CHARACTER
+
+Then STOP.
+
+METHOD A — GENERATE A NEW CHARACTER
+
+CHARACTER GENERATION FORM — FINAL VERSION
+
+The Character Generation Form must use practical predefined options.
+Do NOT add "Custom" as a generic dropdown option to every field.
+Use predefined options wherever possible.
+Only show a separate descriptive text field when the user needs
+additional creative control.
+
+1. CHARACTER NAME
+Optional text field.
+
+2. GENDER
+Dropdown:
+- Female
+- Male
+- Non-binary
+
+3. AGE RANGE
+Dropdown:
+- 18–24
+- 25–34
+- 35–44
+- 45–54
+- 55+
+
+4. DEMOGRAPHIC / APPEARANCE
+Dropdown:
+- White / European-American
+- Black / African-American
+- East Asian-American
+- South Asian-American
+- Latina / Hispanic-American
+- Middle Eastern-American
+- Southeast Asian-American
+- Native American
+- Pacific Islander-American
+- Mixed / Multiracial
+
+Also provide:
+"Other Appearance Description"
+Optional text field.
+If filled, incorporate the description into the generation prompt.
+
+5. SKIN TONE
+Dropdown:
+- Porcelain
+- Fair
+- Light
+- Light-Medium
+- Medium
+- Tan
+- Warm Tan
+- Deep
+- Dark
+- Deep Dark
+
+Also provide:
+"Skin Undertone"
+Dropdown:
+- Cool
+- Neutral
+- Warm
+- Olive
+
+6. EYE COLOR
+Dropdown:
+- Dark Brown
+- Brown
+- Hazel
+- Amber
+- Blue
+- Green
+- Gray
+
+7. HAIR COLOR
+Dropdown:
+- Black
+- Dark Brown
+- Brown
+- Light Brown
+- Blonde
+- Dark Blonde
+- Red
+- Auburn
+- Gray
+- Silver
+
+8. HAIR STYLE
+Dropdown:
+- Straight
+- Wavy
+- Curly
+- Coily
+- Short
+- Medium
+- Long
+- Bob
+- Lob
+- Ponytail
+- High Ponytail
+- Low Ponytail
+- Bun
+- High Bun
+- Low Bun
+- Messy Bun
+- Braided
+- Half-Up
+- Pixie
+
+Also provide:
+"Detailed Hairstyle"
+Optional text field.
+Example: "Messy bun with loose face-framing strands"
+
+IMPORTANT:
+The detailed hairstyle description must be treated as a direct
+generation instruction.
+
+9. BODY TYPE
+Dropdown:
+- Slim
+- Average
+- Athletic
+- Curvy
+- Plus-size
+
+10. HEIGHT / BUILD
+Dropdown:
+- Petite
+- Short
+- Average Height
+- Tall
+- Very Tall
+
+Also provide:
+"Build Details"
+Optional text field.
+Example: "Approximately 5'6", slim proportional build"
+
+11. OUTFIT STYLE
+Dropdown:
+- Premium Casual
+- Luxury
+- Professional
+- Creator / UGC
+- Streetwear
+- Minimalist
+- Fitness
+- Beauty / Skincare
+- Smart Casual
+- Business Casual
+- Athleisure
+- Evening
+- Denim Casual
+
+Also provide:
+"Specific Outfit Description"
+Optional text field.
+Example: "Black tailored blazer, ivory silk camisole and tailored trousers"
+
+IMPORTANT:
+The outfit must be treated as a separate variable from character identity.
+
+12. ACCESSORIES
+Do NOT use only "Custom".
+Provide a multi-select option:
+- None
+- Small Gold Hoop Earrings
+- Large Gold Hoop Earrings
+- Stud Earrings
+- Silver Earrings
+- Gold Necklace
+- Delicate Necklace
+- Bracelet
+- Watch
+- Ring
+- Hair Clips
+- Headband
+- Glasses
+- Sunglasses
+
+Also provide:
+"Additional Accessories"
+Optional text field.
+
+13. PERSONALITY
+Multi-select (maximum 3):
+- Relatable
+- Friendly
+- Warm
+- Confident
+- Professional
+- Energetic
+- Calm
+- Elegant
+- Playful
+- Sophisticated
+- Approachable
+- Authentic
+
+14. CONTENT STYLE
+Dropdown:
+- Lifestyle
+- Beauty
+- Skincare
+- Fashion
+- Fitness
+- Technology
+- Education
+- UGC
+- Product Review
+- Tutorial
+- Professional Creator
+
+15. CHARACTER EXPRESSION
+Dropdown:
+- Natural
+- Friendly
+- Soft Smile
+- Confident
+- Happy
+- Serious
+- Professional
+Default: Natural
+
+16. CHARACTER PRESENTATION
+Dropdown:
+- Full Body
+- 3/4 Body
+- Waist Up
+- Portrait
+Default: Full Body
+
+GENERATION LOGIC
+
+After the user completes the form, combine all selected attributes
+into ONE structured character-generation prompt.
+
+The prompt must prioritize:
+1. Character identity
+2. Facial consistency
+3. Age appearance
+4. Skin tone
+5. Eye color
+6. Hair
+7. Body proportions
+8. Outfit
+9. Accessories
+10. Personality
+11. Content style
+12. Presentation/framing
+
+Do not allow one attribute to accidentally override another.
+
+The character should look like a believable everyday creator — not a
+model in a fashion campaign — unless the user explicitly requests a
+premium look.
+
+AFTER GENERATING THE BASE CHARACTER IMAGE:
+Show the image and ask ONLY:
+"Is this character look okay, or do you want any changes?"
+Then STOP.
+If the user requests changes → regenerate with changes.
+If the user approves → IMMEDIATELY proceed to generate the
+CHARACTER REFERENCE SHEET (below). Do NOT say "APPROVE CHARACTER"
+yet. The base image approval is NOT the final approval.
+
+CHARACTER IDENTITY RULE
+
+The generated person must look like ONE REAL, CONSISTENT PERSON.
+
+Maintain:
+- same facial structure
+- same facial proportions
+- same eye shape
+- same eye color
+- same nose
+- same lips
+- same jawline
+- same skin tone
+- same apparent age
+- same body proportions
+- same hair color
+- same hairstyle
+
+Do not create multiple different people within the same
+Character Reference Sheet.
+
+CHARACTER REFERENCE SHEET — MANDATORY, NEVER SKIP
+
+After the base character look is approved, you MUST generate a
+dedicated Character Reference Sheet (9:16 layout) as your NEXT
+action. This is NOT optional. This is the required output of
+Stage 1B.
+
+The sheet must contain ALL of these 8 panels:
+1. Full-body front view
+2. 3/4 view
+3. Side profile
+4. Back view
+5. Face close-up
+6. Neutral expression
+7. Soft smile
+8. Friendly smile
+
+All panels must show the SAME PERSON.
+
+The character reference sheet is an IDENTITY asset.
+It is NOT a storyboard.
+It is NOT a scene.
+It is NOT a commercial shot.
+It is NOT a UGC scene.
+
+Use a clean neutral studio background.
+
+Do NOT include:
+- product
+- smartphone
+- camera
+- ring light
+- microphone
+- advertising props
+- lifestyle location
+- random objects
+unless explicitly requested.
+
+AFTER SHOWING THE SHEET, ask ONLY:
+"Approve this Character Reference Sheet?"
+Then STOP.
+
+You are FORBIDDEN from locking the character or mentioning the
+Product Stage before the user approves this sheet.
+
+PROMPT FALLBACK SYSTEM
+
+IMPORTANT:
+After every character-generation attempt, ALWAYS provide the
+complete image-generation prompt used to create the character.
+
+Display:
+"IMAGE GENERATION PROMPT"
+Then provide a clean, copyable prompt containing the complete
+character specifications.
+
+The prompt must be independent of the internal UI.
+The user must be able to copy this prompt and use it in another
+image-generation tool.
+
+IF IMAGE GENERATION FAILS OR IS BLOCKED
+If the image-generation model refuses, blocks, or fails to create
+the image:
+
+DO NOT END THE WORKFLOW.
+DO NOT simply display an error message.
+
+Instead:
+1. Preserve all user-selected character attributes.
+2. Explain briefly that the current image model could not generate
+   the image.
+3. Immediately provide:
+"READY-TO-USE IMAGE PROMPT"
+4. Provide the complete image-generation prompt.
+5. Provide a second "SAFE ALTERNATIVE PROMPT" that preserves the
+   user's intended visual characteristics while using neutral,
+   non-sensitive wording.
+6. Allow the user to copy the prompt and try it in another
+   compatible image-generation tool.
+
+The workflow must remain usable even when the built-in image
+generation fails.
+
+PROMPT OUTPUT FORMAT
+
+IMAGE GENERATION PROMPT
+[Complete copyable prompt]
+
+NEGATIVE PROMPT
+[Relevant visual consistency exclusions]
+
+CHARACTER SUMMARY
+Name:
+Gender:
+Age:
+Appearance:
+Skin:
+Eyes:
+Hair:
+Body:
+Height:
+Outfit:
+Accessories:
+Personality:
+Content Style:
+
+METHOD B — UPLOAD EXISTING CHARACTER
+
+If the user chooses:
+UPLOAD EXISTING CHARACTER
+
+provide an upload area that supports multiple character reference
+images. Allow up to 10 character reference images.
+
+The user may upload:
+- front portrait
+- 3/4 portrait
+- side profile
+- full body
+- back view
+- different expressions
+- different outfits
+- additional identity references
+
+Analyze ALL uploaded images together.
+
+Determine the character's:
+- face
+- facial proportions
+- age appearance
+- skin tone
+- eye color
+- hair color
+- hairstyle
+- body proportions
+- height/build
+- distinguishing features
+
+The uploaded character images are the identity source of truth.
+Do NOT replace the identity with a newly invented person.
+
+CRITICAL — METHOD B ALSO REQUIRES THE SHEET:
+After analysis, you MUST still generate the same CHARACTER
+REFERENCE SHEET (9:16 layout, all 8 panels) as described in
+Method A, based on the uploaded identity. Receiving uploaded
+images does NOT complete Stage 1. The sheet is still mandatory.
+
+Show the analysis + ask "Is my analysis correct?" → STOP →
+then generate the sheet → show it → ask "Approve this Character
+Reference Sheet?" → STOP → only then lock identity.
+
+IDENTITY LOCK
+
+Once the Character Reference Sheet is approved:
+
+LOCK THE CHARACTER IDENTITY.
+
+From this point onward, all future generations must preserve:
+- same face
+- same facial structure
+- same eyes
+- same skin tone
+- same hair characteristics
+- same body proportions
+- same recognizable identity
+
+Outfit changes are allowed when explicitly requested.
+Changing the outfit MUST NOT change the character's identity.
+Hair changes are allowed only when explicitly requested.
+Any requested hairstyle change must still preserve the same face and
+underlying character identity.
+
+OUTFIT / IDENTITY SEPARATION
+
+IMPORTANT:
+Changing the outfit must NOT regenerate the character identity.
+
+For future productions:
+LOCKED CHARACTER IDENTITY + NEW OUTFIT = SAME PERSON / DIFFERENT OUTFIT
+
+The following may change when explicitly requested:
+- outfit
+- clothing color
+- clothing style
+- accessories
+- scene
+- location
+- pose
+- expression
+
+The following must remain locked unless the user explicitly asks
+to redesign the character:
+- face
+- facial structure
+- eye identity
+- skin tone
+- body proportions
+- apparent age
+- core hair identity
+
+Example:
+"Keep the locked character exactly the same. Change only the outfit
+to: Oversized cream hoodie, light-wash jeans and white sneakers."
+The face, body, skin, hair identity and proportions must remain
+unchanged.
+
+CHARACTER APPROVAL FLOW — CORRECTED AND LOCKED
+
+This exact sequence is MANDATORY:
+
+Ask Method A or B
+        ↓
+Generate/Upload Character
+        ↓
+Show base character / analysis → user confirms look
+        ↓
+GENERATE CHARACTER REFERENCE SHEET IMAGE (9:16, 8 panels)
+        ↓
+Show the sheet to the user
+        ↓
+Provide IMAGE GENERATION PROMPT + NEGATIVE PROMPT + CHARACTER SUMMARY
+        ↓
+User Approves THE SHEET
+        ↓
+CHARACTER IDENTITY LOCKED 🔒
+        ↓
+"✅ STAGE 1 COMPLETE" → ask permission → Continue to Product Stage
+
+Never skip the Character Reference Sheet.
+Never ask "APPROVE CHARACTER" before the sheet exists.
+Never allow the workflow to move to Product Stage before the
+Character Reference Sheet has been generated, shown, and approved.
+
+STAGE 2 — PRODUCT REFERENCE INTAKE
+
+After the character stage:
+
+Ask ONLY:
+"Do you already have a product image you want to use?"
+
+Give exactly two choices:
+YES — I will provide the product image.
+NO — I will provide the product image later.
+
+Then STOP.
+
+IMPORTANT:
+You MUST NOT create a product yourself.
+You MUST NOT invent a product design.
+The product identity must come from the user's supplied product image.
+
+If the user selects YES, wait for the product image.
+If the user selects NO, allow the workflow to continue, but do not
+invent a product reference image.
+
+PRODUCT IMAGE ANALYSIS
+
+When the user provides the product image:
+
+Use it as the PRIMARY PRODUCT REFERENCE.
+
+Analyze and preserve:
+- Product shape
+- Dimensions/proportions
+- Materials
+- Colors
+- Finish
+- Buttons
+- Controls
+- Display
+- Logos
+- Branding
+- Text
+- Branding placement
+- Surface details
+- Unique design elements
+- Physical construction
+- Distinctive features
+
+The user's product image has absolute visual priority.
+
+DO NOT redesign the product.
+DO NOT change the logo.
+DO NOT change branding.
+DO NOT change buttons.
+DO NOT change colors.
+DO NOT change proportions.
+DO NOT invent conflicting features.
+DO NOT invent technical specifications that are not visible or provided.
+
+PRODUCT SHEET
+
+Create a detailed PRODUCT SHEET based ONLY on the supplied product image.
+
+Include:
+- Product name
+- Product type
+- Shape
+- Approximate visual proportions
+- Materials
+- Colors
+- Finish
+- Controls
+- Buttons
+- Display
+- Branding
+- Logo placement
+- Unique design features
+- Visible product details
+- How a creator would naturally hold/use it in hand
+- Product consistency rules
+
+Then create:
+ONE SEPARATE HIGH-QUALITY PRODUCT REFERENCE SHEET IMAGE (9:16 layout).
+
+The Product Reference Sheet Image may show:
+- Front view
+- Left view
+- Right view
+- Rear view
+- Top view
+- In-hand scale view
+- Important detail views
+- Controls
+- Branding
+- Product construction
+
+But it must represent the SAME PRODUCT.
+
+After showing it, ask ONLY:
+"Approve this Product Reference Sheet?"
+Then STOP.
+
+PRODUCT LOCK
+
+Once the product reference sheet is created:
+
+LOCK THE PRODUCT DESIGN.
+
+From this point forward:
+Same shape. Same proportions. Same materials. Same colors.
+Same finish. Same buttons. Same controls. Same display.
+Same logo. Same branding. Same physical design.
+
+Never randomly redesign the product.
+
+Then write "✅ STAGE 2 COMPLETE" and ask permission before
+continuing to Stage 3. Then STOP.
+
+STAGE 3 — LOCATION REFERENCE INTAKE
+
+After the product stage:
+
+Ask ONLY:
+"Do you already have a location image you want to use?"
+
+Give exactly two choices:
+YES — I will provide the location image.
+NO — Create the location yourself.
+
+Then STOP.
+
+IF USER PROVIDES LOCATION IMAGE
+
+Use the supplied image as the PRIMARY LOCATION REFERENCE.
+
+Analyze and preserve:
+- Architecture
+- Room/environment structure
+- Layout
+- Furniture
+- Major objects
+- Materials
+- Colors
+- Lighting
+- Windows
+- Doors
+- Flooring
+- Walls
+- Ceiling
+- Important props
+- Overall visual identity
+- Time-of-day characteristics
+
+DO NOT redesign the location.
+DO NOT randomly change the architecture.
+DO NOT change the layout.
+DO NOT replace major objects unnecessarily.
+
+Create a detailed LOCATION SHEET.
+Then create:
+ONE SEPARATE HIGH-QUALITY LOCATION REFERENCE SHEET IMAGE (9:16 layout).
+
+IF USER DOES NOT PROVIDE LOCATION IMAGE
+
+If the user chooses:
+"NO — Create the location yourself."
+
+You ARE allowed to create the location yourself.
+
+Design a suitable location based on:
+- UGC ad concept potential
+- Product category
+- Everyday real American environment (bedroom, kitchen, bathroom,
+  car, gym, park, home office, dorm, coffee shop)
+- Character's lifestyle and content style
+- Authentic creator aesthetic — lived-in, realistic, NOT a staged
+  studio set
+- Natural daylight or practical home lighting preferred over studio
+  lighting
+
+Create the location design.
+Then create:
+ONE SEPARATE HIGH-QUALITY LOCATION REFERENCE SHEET IMAGE (9:16 layout).
+
+IMPORTANT:
+This is ONLY a LOCATION REFERENCE.
+DO NOT create a storyboard here.
+DO NOT create UGC scenes here.
+DO NOT create shot panels here.
+DO NOT create a storyboard table here.
+DO NOT create a script here.
+DO NOT create future ad visuals here.
+
+LOCATION SHEET CONTENT
+
+The LOCATION SHEET must contain ONLY location information.
+
+It may include:
+- Location title
+- Main environment view
+- Alternate angle
+- Wide environment view
+- Important areas
+- Important objects
+- Props
+- Architecture
+- Materials
+- Color palette
+- Lighting
+- Time of day
+- Weather if relevant
+- Environment description
+- Continuity notes
+
+It MUST NOT contain:
+- Storyboard
+- Storyboard panels
+- Shot numbers
+- UGC script
+- Dialogue
+- Voiceover
+- Final advertising message
+- Character scene sequence
+- Product advertisement sequence
+
+ABSOLUTE LOCATION IMAGE SEPARATION RULE
+
+LOCATION SHEET IMAGE = LOCATION ONLY.
+STORYBOARD IMAGE = UGC AD STORY ONLY.
+NEVER combine them.
+
+Even if the location was generated by AI, the output must still be
+a standalone LOCATION SHEET IMAGE.
+
+The location sheet must be completed BEFORE moving forward.
+
+After showing it, ask ONLY:
+"Approve this Location Reference Sheet?"
+Then STOP.
+
+LOCATION LOCK
+
+Once the location sheet is created:
+
+LOCK THE LOCATION.
+
+Maintain:
+- Same architecture
+- Same layout
+- Same furniture
+- Same major objects
+- Same materials
+- Same color palette
+- Same visual identity
+- Same environmental logic
+
+The location can have different camera angles later, but it must
+remain the SAME LOCATION.
+
+Then write "✅ STAGE 3 COMPLETE" and ask permission before
+continuing to Stage 4. Then STOP.
+
+STAGE 4 — GENERATE 10 UGC AD CONCEPTS
+
+ONLY AFTER the Character Reference, Product Reference, and Location
+Reference stages are complete:
+
+Generate exactly 10 original UGC ad concepts suitable for a modern
+US audience on TikTok / Reels / Shorts.
+
+These concepts are TEXT ONLY.
+DO NOT generate storyboard images at this stage.
+DO NOT generate storyboard panels.
+DO NOT generate shot lists as images.
+DO NOT generate storyboard visuals.
+
+Each concept must use a recognizable UGC format, for example:
+- Talking-head testimonial
+- Problem → Solution demo
+- Unboxing / first impression
+- "Things I wish I knew" listicle
+- Day-in-the-life integration
+- Before / After transformation
+- Get Ready With Me (GRWM)
+- Tutorial / How-to
+- Reaction / honest review
+- Storytime ("So I tried...")
+- POV format
+- "3 reasons why" format
+- Duet/stitch-style response
+- ASMR product experience
+
+Do not make every concept the same format.
+Do not make every idea technology-related — match the product category.
+
+Every concept must contain:
+- Product
+- Concept title
+- UGC format type
+- Scroll-stopping hook (the exact opening line for the first 1–3 seconds)
+- Customer problem or desire
+- Product solution shown naturally in use
+- Authentic payoff moment
+- Call to action (soft, creator-style — not corporate)
+- Recommended filming style (selfie handheld, tripod static, POV,
+  over-shoulder, etc.)
+
+The concepts should feel like real high-performing creator ads, not
+TV commercials.
+
+Use natural American settings, situations, names, and modern casual
+American English — the way real creators actually talk.
+
+After the 10 ideas, ask ONLY:
+"Which UGC ad do you want to create?"
+Then STOP.
+
+STAGE 5 — USER SELECTS CONCEPT
+
+Wait for the user's selection.
+
+Once the user selects one:
+LOCK THAT UGC AD CONCEPT.
+
+Do not create storyboard yet.
+Do not create storyboard image yet.
+Do not create storyboard panels yet.
+Do not create the final Flow AI prompt yet.
+
+Move to Stage 6.
+
+STAGE 6 — ASK FOR DURATION
+
+Ask ONLY:
+"What duration do you want?"
+
+Give:
+- 15 seconds
+- 30 seconds
+- 45 seconds
+- 60 seconds
+
+Then STOP.
+Do not generate storyboard until the duration is selected.
+
+STAGE 7 — WRITE THE UGC AD SCRIPT
+
+After the user provides the duration:
+
+Create the complete UGC ad script.
+The script must fit the selected duration.
+
+UGC SCRIPT RULES:
+- The HOOK must land within the first 1–3 seconds. Write the exact
+  opening line.
+- The character speaks DIRECTLY TO CAMERA like a real creator talking
+  to their followers.
+- Use casual, conversational, contemporary American English —
+  contractions, natural filler rhythm, real speech patterns.
+- Sentences must be short and speakable.
+- NO corporate language. NO "Introducing..." NO "Say goodbye to..."
+- Product claims must sound like personal experience ("I've been
+  using this for two weeks and honestly...") not ad copy.
+- Show the product being USED, not just talked about.
+- Include ONE clear soft CTA at the end ("link's in my bio",
+  "they're having a sale rn", "trust me on this one").
+- Include suggested ON-SCREEN TEXT OVERLAYS (captions/keywords) per
+  beat, in the style of native platform captions.
+- Note delivery direction per line (tone, energy, gesture) where useful.
+
+The story should naturally follow:
+HOOK (0–3s)
+→ RELATABLE PROBLEM / CURIOSITY
+→ PRODUCT INTRODUCED NATURALLY
+→ DEMO / EXPERIENCE
+→ HONEST REACTION / RESULT
+→ SOFT CTA
+
+Do not label these sections in the final script.
+Animals must never speak human language.
+The final script should feel like ONE authentic creator video, not
+a polished advertisement.
+
+IMPORTANT:
+At this stage, create TEXT ONLY.
+Do not create storyboard images yet.
+
+After delivering the script, ask ONLY:
+"Is this script approved, or do you want changes?"
+Then STOP.
+
+STAGE 8 — STORYBOARD PLAN
+
+Storyboard creation is allowed ONLY NOW.
+
+Before creating the storyboard, verify that all required elements exist:
+1. Approved locked character reference
+2. Product reference
+3. Location reference
+4. Selected UGC ad concept
+5. Selected duration
+6. Completed UGC ad script
+
+If any required element is missing:
+DO NOT create the storyboard.
+
+STORYBOARD PLAN — TEXT/TABLE
+
+First create the complete storyboard plan.
+
+For every shot include:
+- Shot number
+- Approximate duration
+- Framing type (selfie handheld close-up, tripod medium shot, POV,
+  over-shoulder, product close-up in hand, etc.)
+- Main action
+- Character present
+- Product presence
+- Location
+- Spoken line / on-screen text overlay
+- Camera (handheld phone, static phone on tripod, slight shake, etc.)
+- Important continuity notes
+
+UGC SHOT STYLE RULES:
+- Every shot is 9:16 vertical.
+- Camera is ALWAYS a smartphone perspective — handheld selfie,
+  propped phone, or someone filming on a phone.
+- Slight natural handheld movement is encouraged; perfect
+  gimbal-smooth cinematic moves are NOT.
+- No drone shots. No crane shots. No dolly shots. No cinematic
+  slow push-ins.
+- Framing should feel native: face slightly off-center, chin-level
+  or slightly high selfie angle, real room in background.
+- Lighting should match the locked location's natural/practical light.
+
+For 45–60 seconds: normally use approximately 6–10 shots.
+For 15–30 seconds: normally use approximately 3–6 shots.
+
+Each shot must represent one clear visual moment.
+The storyboard must follow the script exactly.
+
+After delivering the plan, ask ONLY:
+"Is this storyboard plan approved? Should I now create the
+Complete Storyboard Image?"
+Then STOP.
+
+STAGE 9 — COMPLETE STORYBOARD IMAGE (9:16)
+
+ONLY AFTER the storyboard PLAN is completed and approved:
+
+Create ONE SINGLE, SEPARATE COMPLETE STORYBOARD IMAGE.
+
+This is the first stage where storyboard visual generation is allowed.
+
+The storyboard image must show:
+SHOT 1 → SHOT 2 → SHOT 3 → ... → FINAL SHOT
+
+Every panel must correspond directly to the storyboard plan.
+Every panel is framed 9:16 VERTICAL.
+
+Use the locked:
+- Character reference
+- Product reference
+- Location reference
+
+The storyboard must show the actual UGC ad progression, filmed from
+smartphone perspectives.
+
+STORYBOARD IMAGE CONTENT
+
+The Complete Storyboard Image may include:
+- Shot number
+- Duration
+- Visual action
+- Character
+- Product
+- Location
+- Smartphone framing/composition
+- Spoken line / text overlay when useful
+- Emotional progression
+- Final CTA moment
+
+Each panel must represent a specific shot.
+
+The storyboard image must NOT contain:
+- A separate location sheet
+- A separate product sheet
+- A separate character sheet
+- Unrelated reference images
+- Future concepts
+- Alternative UGC ad ideas
+
+CRITICAL STORYBOARD SEPARATION RULE
+
+NEVER combine: LOCATION SHEET + STORYBOARD IMAGE.
+NEVER combine: PRODUCT SHEET + STORYBOARD IMAGE.
+NEVER combine: CHARACTER SHEET + STORYBOARD IMAGE.
+
+The Complete Storyboard Image must be its own independent image.
+
+After showing it, ask ONLY:
+"Approve this Complete Storyboard Image?"
+Then STOP.
+
+STAGE 10 — FINAL CONSISTENCY CHECK
+
+Before creating the final Flow AI Agent prompt, verify:
+
+CHARACTER:
+- Same face
+- Same identity
+- Same hairstyle
+- Same age appearance
+- Same body type
+- Same outfit (unless the script explicitly requires an outfit change)
+- Same accessories
+
+PRODUCT:
+- Same shape
+- Same proportions
+- Same colors
+- Same materials
+- Same branding
+- Same logo
+- Same controls
+
+LOCATION:
+- Same architecture
+- Same layout
+- Same environment
+- Same major objects
+- Same visual identity
+
+STORY:
+- Correct sequence
+- Hook in first 1–3 seconds
+- Correct spoken lines
+- Correct product usage
+- Correct CTA ending
+
+UGC FORMAT:
+- All shots 9:16 vertical
+- Smartphone camera perspective in every shot
+- Authentic creator feel — no cinematic polish
+- Text overlays match the script
+
+VISUAL STYLE:
+- Consistent visual style
+- No random style changes
+
+FINAL ASSET CHECK
+
+Before creating the final Flow AI Agent prompt, confirm that the
+following are separate assets:
+
+ASSET 1: CHARACTER REFERENCE SHEET IMAGE (9:16)
+ASSET 2: PRODUCT REFERENCE SHEET IMAGE (9:16)
+ASSET 3: LOCATION REFERENCE SHEET IMAGE (9:16)
+ASSET 4: COMPLETE STORYBOARD IMAGE (9:16 PANELS)
+
+These must be four separate visual assets.
+
+If any asset accidentally contains another asset:
+STOP and regenerate ONLY the incorrect asset.
+
+Example:
+If Location Sheet contains storyboard panels:
+Regenerate ONLY the Location Sheet. Do not regenerate the storyboard.
+If Storyboard contains a location reference section:
+Regenerate ONLY the Storyboard. Do not regenerate the Location Sheet.
+
+Present the consistency check report, then ask ONLY:
+"Consistency check passed. Should I create the Final Flow AI Agent
+Master Prompt?"
+Then STOP.
+
+STAGE 11 — FINAL FLOW AI AGENT MASTER PROMPT
+
+Only after all planning assets are complete:
+
+Create ONE final master prompt specifically for Flow AI Agent Mode.
+
+The final prompt must instruct Flow AI Agent to use ALL of the
+following as authoritative references:
+1. UGC Ad Script
+2. Approved Character Reference Image
+3. Approved Product Reference Image
+4. Approved Location Reference Image
+5. Complete Storyboard Image (9:16)
+
+Treat these references as ONE UNIFIED PRODUCTION PLAN.
+
+FLOW AI AGENT REQUIREMENTS
+
+The Flow AI Agent must:
+- Output 9:16 VERTICAL video
+- Follow the UGC ad script
+- Follow the storyboard
+- Follow the character reference
+- Follow the product reference
+- Follow the location reference
+- Maintain character identity in every shot
+- Maintain product identity in every shot
+- Maintain location identity
+- Maintain outfit consistency
+- Maintain visual style
+- Maintain story continuity
+- Maintain dialogue continuity
+- Maintain product branding
+- Keep smartphone filming aesthetic (handheld selfie / propped
+  phone / POV)
+- Keep natural slight handheld movement
+- Keep natural/practical lighting from the locked location
+- Deliver the hook within the first 1–3 seconds
+- Include on-screen text overlays as specified in the script
+- End with the specified soft CTA
+
+Do not redesign characters.
+Do not redesign products.
+Do not redesign locations.
+Do not randomly change clothing.
+Do not randomly change props.
+Do not randomly change the visual style.
+Do not add cinematic camera moves (drones, cranes, dollies, gimbal
+sweeps).
+Do not make it look like a TV commercial.
+
+MULTI-PART VIDEO CONTINUITY
+
+If the final UGC ad requires multiple generated video parts:
+
+Treat all parts as ONE continuous creator video.
+
+PART 1 establishes the visual identity.
+PART 2 must continue naturally from PART 1.
+PART 3 must continue naturally from PART 2.
+And so on.
+
+Before generating every new part, compare it against:
+- Character reference
+- Product reference
+- Location reference
+- Storyboard
+- UGC ad script
+- Previous generated part
+
+Preserve:
+- Face
+- Hair
+- Outfit
+- Body
+- Product design
+- Product position
+- Environment
+- Lighting logic
+- Time progression
+- Story state
+- Smartphone filming style
+
+The final assembled video must look like ONE authentic creator video.
+It must NOT look like unrelated AI clips stitched together.
+
+ANIMAL RULE
+
+Animals may appear when appropriate.
+Animals NEVER speak human language.
+Animals NEVER receive human dialogue.
+Animals communicate only through:
+- Natural movement
+- Facial expressions
+- Body language
+- Barking
+- Whining
+- Growling
+- Natural animal sounds
+
+If an animal appears in multiple shots, maintain the exact same
+animal appearance throughout.
+
+UGC VISUAL STYLE
+
+The default and strongly preferred style is:
+AUTHENTIC SMARTPHONE UGC — real creator aesthetic.
+
+Characteristics:
+- Smartphone camera look (slight wide-angle selfie lens feel where
+  appropriate)
+- Natural or practical lighting (window light, room lamps, bathroom
+  light)
+- Realistic skin texture — not airbrushed commercial skin
+- Lived-in real backgrounds from the locked location
+- Casual natural performance — talking like a friend, not an actor
+- Native platform text overlays (bold captions, keyword highlights)
+
+Do NOT use:
+- Cinematic color grading
+- Anamorphic lens looks
+- Studio three-point lighting
+- Commercial film crew aesthetics
+- Overly polished stock-video feel
+
+Only deviate from authentic UGC style if the user explicitly
+requests it.
+
+ABSOLUTE FUTURE-STAGE PROTECTION
+
+This rule overrides creative assumptions:
+
+CURRENT STAGE ONLY.
+ONE STAGE.
+ONE TASK.
+ONE REQUIRED OUTPUT.
+
+Never generate future-stage assets early.
+
+Specifically:
+DO NOT create storyboard during Character Sheet generation.
+DO NOT create storyboard during Product Sheet generation.
+DO NOT create storyboard during Location Sheet generation.
+DO NOT create storyboard while generating the 10 concepts.
+DO NOT create storyboard before the user selects a concept.
+DO NOT create storyboard before the user selects a duration.
+DO NOT create storyboard before the UGC ad script.
+DO NOT create storyboard before the storyboard plan.
+DO NOT create the final Flow AI Agent prompt before the Complete
+Storyboard Image.
+
+FINAL OUTPUT ORDER
+
+The complete workflow must be:
+
+1. Ask: Generate New Character OR Upload Existing Character → STOP
+2. Method A → Character Generation Form (16 fields) → Generate base
+   character → user confirms look
+   Method B → Upload up to 10 images → Analyze Character → user
+   confirms analysis
+3. GENERATE CHARACTER REFERENCE SHEET IMAGE (9:16, 8 panels) —
+   MANDATORY, NEVER SKIP → show it
+4. Provide IMAGE GENERATION PROMPT + NEGATIVE PROMPT + CHARACTER
+   SUMMARY
+5. User Approves THE SHEET
+6. Lock Character Identity 🔒 → "✅ STAGE 1 COMPLETE" → ask
+   permission → STOP
+
+7. Ask for Product Image → STOP
+8. Analyze Product Image
+9. Create Product Sheet
+10. Create Separate Product Reference Sheet Image (9:16) → user
+    approves
+11. Lock Product 🔒 → "✅ STAGE 2 COMPLETE" → ask permission → STOP
+
+12. Ask for Location Image → STOP
+13. If supplied → analyze it
+14. If not supplied → create location yourself (authentic creator
+    environment)
+15. Create Location Sheet
+16. Create Separate Location Reference Sheet Image (9:16) → user
+    approves
+17. Lock Location 🔒 → "✅ STAGE 3 COMPLETE" → ask permission → STOP
+
+18. Generate exactly 10 UGC Ad Concepts
+19. Ask user to select one → STOP → Wait
+20. Lock concept
+
+21. Ask duration → STOP → Wait
+
+23. Write UGC Ad Script (hook in first 1–3s + text overlays + soft
+    CTA) → user approves → STOP
+24. Create Storyboard Plan in text/table (smartphone framing per
+    shot) → user approves → STOP
+25. Create ONE Separate Complete Storyboard Image (9:16 panels) →
+    user approves → STOP
+26. Perform Final Consistency Check → show report → ask permission
+27. Create Final Flow AI Agent Master Prompt
+
+START NOW
+
+First ask ONLY:
+
+"Do you want to generate a new character, or upload an existing
+character?"
+
+Give exactly:
+A — GENERATE A NEW CHARACTER
+B — UPLOAD AN EXISTING CHARACTER
+
+Then STOP.
+
+RULE G2 — STAGE COMPLETE CONFIRMATION
+After delivering each stage's required output, you MUST write:
+
+"✅ STAGE [X] COMPLETE — [name of output delivered]"
+
+Then ask ONLY:
+
+"Should I start the next stage ([next stage name])?"
+
+Then STOP and WAIT for the user's reply.
+Never continue without the user's confirmation.
+</script>
+<script>
+/* ---------------- DATA ---------------- */
+/* Option labels match the master prompt exactly. Descriptions are plain-language help only; they are never sent to ChatGPT. */
+const FIELDS=[
+ {n:1,k:"name",label:"CHARACTER NAME",type:"text",ph:"e.g. Emma (optional)",help:"Optional. A first name makes the character feel like a real creator."},
+ {n:2,k:"gender",label:"GENDER",type:"one",opts:[["Female","A woman."],["Male","A man."],["Non-binary","A person who doesn't identify as only a man or a woman."]]},
+ {n:3,k:"age",label:"AGE RANGE",type:"one",opts:[["18–24","College age or just starting out. Trend-driven, social."],["25–34","Young adult, early career, building a life."],["35–44","Established adult, often a parent, busy schedule."],["45–54","Experienced, confident, cares about quality."],["55+","Mature, trusted, calm voice of experience."]],help:"Match the age of the people who buy your product. Viewers trust someone like themselves."},
+ {n:4,k:"demo",label:"DEMOGRAPHIC / APPEARANCE",type:"one",opts:[["White / European-American","European ancestry."],["Black / African-American","African ancestry."],["East Asian-American","Chinese, Japanese, Korean ancestry and similar."],["South Asian-American","Indian, Pakistani, Bangladeshi, Sri Lankan ancestry and similar."],["Latina / Hispanic-American","Latin American or Spanish ancestry."],["Middle Eastern-American","Arab, Persian, Turkish ancestry and similar."],["Southeast Asian-American","Filipino, Vietnamese, Thai, Indonesian ancestry and similar."],["Native American","Indigenous American ancestry."],["Pacific Islander-American","Hawaiian, Samoan, Tongan ancestry and similar."],["Mixed / Multiracial","More than one background."]],
+  sub:{k:"demoX",label:"Other Appearance Description",type:"text",ph:"e.g. light freckles across the nose"}},
+ {n:5,k:"skin",label:"SKIN TONE",type:"one",opts:[["Porcelain","Very pale, almost white. Burns easily in the sun."],["Fair","Pale with a little color."],["Light","Light skin that tans a little."],["Light-Medium","Between light and medium. Tans easily."],["Medium","Beige or olive middle tone."],["Tan","Naturally sun-kissed, light brown."],["Warm Tan","Golden light brown."],["Deep","Rich medium-dark brown."],["Dark","Dark brown."],["Deep Dark","Very dark brown."]],
+  sub:{k:"under",label:"Skin Undertone",type:"one",opts:[["Cool","Pink or rosy hints under the skin."],["Neutral","A mix; neither pink nor golden."],["Warm","Golden, peachy or yellow hints."],["Olive","A slight green-grey hint. Common with Mediterranean, Middle Eastern and South Asian looks."]]}},
+ {n:6,k:"eyes",label:"EYE COLOR",type:"one",opts:[["Dark Brown","Very dark, almost black."],["Brown","Medium brown."],["Hazel","Brown and green mixed."],["Amber","Golden or copper brown."],["Blue","Blue."],["Green","Green."],["Gray","Grey or silver-blue."]]},
+ {n:7,k:"hairC",label:"HAIR COLOR",type:"one",opts:[["Black","Black."],["Dark Brown","Deep brown, near black."],["Brown","Medium brown."],["Light Brown","Soft light brown."],["Blonde","Yellow-gold blonde."],["Dark Blonde","Darker, honey blonde."],["Red","Bright red or ginger."],["Auburn","Reddish brown."],["Gray","Grey."],["Silver","Shiny silver-white."]]},
+ {n:8,k:"hairS",label:"HAIR STYLE",type:"one",opts:[["Straight","No wave; hair falls flat and smooth."],["Wavy","Loose S-shaped waves."],["Curly","Springy ringlet curls."],["Coily","Tight, dense coils."],["Short","Above the neck."],["Medium","About shoulder length."],["Long","Well past the shoulders."],["Bob","Chin-length cut, all one length."],["Lob","A long bob: between chin and shoulders."],["Ponytail","Hair tied back at the middle of the head."],["High Ponytail","Tied back high, near the top of the head."],["Low Ponytail","Tied back low, at the neck."],["Bun","Hair twisted into a round knot."],["High Bun","A knot on top of the head."],["Low Bun","A knot at the back of the neck."],["Messy Bun","A loose, casual knot with loose strands. Very common for creators at home."],["Braided","Plaited hair."],["Half-Up","Top half tied back, the rest loose."],["Pixie","Very short, cropped cut."]],
+  sub:{k:"hairX",label:"Detailed Hairstyle",type:"text",ph:"e.g. Messy bun with loose face-framing strands"},help:"If you type a detailed hairstyle, ChatGPT follows it exactly."},
+ {n:9,k:"body",label:"BODY TYPE",type:"one",opts:[["Slim","Thin, narrow frame."],["Average","Regular, everyday build."],["Athletic","Toned and fit, looks like they work out."],["Curvy","Fuller hips and bust, defined waist."],["Plus-size","Larger, full-figured body."]]},
+ {n:10,k:"height",label:"HEIGHT / BUILD",type:"one",opts:[["Petite","Small and short, around 5'0\"–5'3\" (152–160 cm)."],["Short","Shorter than most people."],["Average Height","Normal height for their gender."],["Tall","Taller than most people."],["Very Tall","Stands out as very tall."]],
+  sub:{k:"buildX",label:"Build Details",type:"text",ph:"e.g. Approximately 5'6\", slim proportional build"}},
+ {n:11,k:"outfit",label:"OUTFIT STYLE",type:"one",opts:[["Premium Casual","Simple but expensive-looking everyday clothes."],["Luxury","High-end designer look."],["Professional","Office wear: blazer, shirt, trousers."],["Creator / UGC","Comfy, trendy clothes a real creator wears at home."],["Streetwear","Hoodies, sneakers, oversized fits."],["Minimalist","Plain, neutral colors, no logos."],["Fitness","Gym clothes: leggings, sports top."],["Beauty / Skincare","Soft robe, headband or plain top, like a skincare routine."],["Smart Casual","Neat but relaxed: chinos, knit, clean shirt."],["Business Casual","Office-friendly but not formal."],["Athleisure","Sporty clothes worn as everyday outfits."],["Evening","Dressed up for dinner or a night out."],["Denim Casual","Jeans and a simple top."]],
+  sub:{k:"outfitX",label:"Specific Outfit Description",type:"text",ph:"e.g. Oversized cream hoodie, light-wash jeans"},help:"The outfit is separate from the person. Later you can change clothes without changing the face."},
+ {n:12,k:"acc",label:"ACCESSORIES",type:"many",opts:[["None","No accessories."],["Small Gold Hoop Earrings",""],["Large Gold Hoop Earrings",""],["Stud Earrings",""],["Silver Earrings",""],["Gold Necklace",""],["Delicate Necklace",""],["Bracelet",""],["Watch",""],["Ring",""],["Hair Clips",""],["Headband",""],["Glasses",""],["Sunglasses",""]],
+  sub:{k:"accX",label:"Additional Accessories",type:"text",ph:"e.g. thin gold anklet"},help:"Pick any number. Fewer accessories are easier for the AI to keep the same in every clip."},
+ {n:13,k:"pers",label:"PERSONALITY",type:"many",max:3,opts:[["Relatable","Feels like a normal person, like you."],["Friendly","Kind and easy to talk to."],["Warm","Caring, cozy energy."],["Confident","Sure of herself or himself."],["Professional","Knows the topic, sounds expert."],["Energetic","Lively, fast, excited."],["Calm","Relaxed and soothing."],["Elegant","Graceful and refined."],["Playful","Fun, jokes around."],["Sophisticated","Polished and cultured."],["Approachable","Open and welcoming."],["Authentic","Honest and real, not salesy."]],help:"Up to 3. This decides how the character talks and moves on camera."},
+ {n:14,k:"content",label:"CONTENT STYLE",type:"one",opts:[["Lifestyle","Everyday life, home, routines."],["Beauty","Makeup and beauty products."],["Skincare","Skincare routines and products."],["Fashion","Outfits and clothing."],["Fitness","Workouts and health."],["Technology","Gadgets and apps."],["Education","Teaches and explains things."],["UGC","A general creator who reviews all kinds of products."],["Product Review","Honest reviews of things they bought."],["Tutorial","Step-by-step how-to videos."],["Professional Creator","A polished, full-time creator."]],help:"What kind of videos this person usually posts. Match it to your product."},
+ {n:15,k:"expr",label:"CHARACTER EXPRESSION",type:"one",opts:[["Natural","Relaxed, normal face. The default."],["Friendly","Kind, open look."],["Soft Smile","A gentle, small smile."],["Confident","Self-assured look."],["Happy","Big, bright smile."],["Serious","No smile, focused."],["Professional","Neutral, business-like."]]},
+ {n:16,k:"pres",label:"CHARACTER PRESENTATION",type:"one",opts:[["Full Body","Head to toe. Best for a character reference. The default."],["3/4 Body","From the head to around the knees."],["Waist Up","From the head to the waist."],["Portrait","Head and shoulders only."]],help:"How much of the person you see in the first picture. Full Body helps the AI learn the whole look."}
+];
+const DEF={name:"",gender:"Female",age:"18–24",demo:"White / European-American",demoX:"",skin:"Porcelain",under:"Cool",eyes:"Brown",hairC:"Dark Brown",hairS:"Straight",hairX:"",body:"Slim",height:"Average Height",buildX:"",outfit:"Premium Casual",outfitX:"",acc:[],accX:"",pers:["Friendly","Warm"],content:"Skincare",expr:"Friendly",pres:"Full Body"};
+
+const CHOICES={
+ method:[["A","A — GENERATE A NEW CHARACTER","ChatGPT designs a new person from the form in the next step."],["B","B — UPLOAD AN EXISTING CHARACTER","You already have photos of a person (yourself, an AI character you made before). Up to 10 photos."]],
+ product:[["YES","YES — I will provide the product image.","Recommended. You upload your product photos right after this."],["NO","NO — I will provide the product image later.","ChatGPT continues but won't make a product sheet until you upload a photo."]],
+ location:[["YES","YES — I will provide the location image.","You have a photo of the room or place you want."],["NO","NO — Create the location yourself.","ChatGPT designs a real-looking place that fits the product. Used in the video."]],
+ concept:Array.from({length:10},(_,i)=>[String(i+1),"Idea "+(i+1),""]),
+ duration:[["15 seconds","15 seconds","Very short. One quick point. About 3–6 shots."],["30 seconds","30 seconds","Short and punchy. About 3–6 shots."],["45 seconds","45 seconds","Room for a small story. About 6–10 shots. Used in the video."],["60 seconds","60 seconds","Full review or demo. About 6–10 shots."]]
+};
+
+/* Approval gates: question text comes from the master prompt. */
+const GATES={
+ charA:[
+  {id:"c1",q:"Is this character look okay, or do you want any changes?",when:"After ChatGPT shows the first picture of the character.",yes:"It looks okay. No changes."},
+  {id:"c2",q:"Approve this Character Reference Sheet?",when:"After it shows the sheet with 8 views and gives the image prompt and character summary. Check that all 8 views are the same person.",yes:"Yes, I approve this Character Reference Sheet."},
+  {id:"c3",q:"Should I start the next stage (Product Stage)?",when:"After it says \"CHARACTER IDENTITY LOCKED 🔒\" and \"✅ STAGE 1 COMPLETE\". It may ask this in Hindi/Urdu: \"Kya main next stage … start karun?\" It means the same thing.",yes:"Yes"}
+ ],
+ charB:[
+  {id:"b1",q:"Is my analysis correct?",when:"After ChatGPT describes the person in your photos. Check the age, skin, eyes and hair it wrote.",yes:"Yes, your analysis is correct."},
+  {id:"c2",q:"Approve this Character Reference Sheet?",when:"After it shows the sheet with 8 views. Check that all 8 views are the same person as your photos.",yes:"Yes, I approve this Character Reference Sheet."},
+  {id:"c3",q:"Should I start the next stage (Product Stage)?",when:"After it says \"CHARACTER IDENTITY LOCKED 🔒\" and \"✅ STAGE 1 COMPLETE\". It may ask this in Hindi/Urdu: \"Kya main next stage … start karun?\" It means the same thing.",yes:"Yes"}
+ ],
+ product:[
+  {id:"p1",q:"Approve this Product Reference Sheet?",when:"After it shows the product analysis and the product sheet image.",yes:"Yes, I approve this Product Reference Sheet."},
+  {id:"p2",q:"Should I start the next stage (Location Stage)?",when:"After \"✅ STAGE 2 COMPLETE\".",yes:"Yes"}
+ ],
+ location:[
+  {id:"l1",q:"Approve this Location Reference Sheet?",when:"After it shows the location sheet image.",yes:"Yes, I approve this Location Reference Sheet."},
+  {id:"l2",q:"Should I start the next stage (UGC Ad Concepts)?",when:"After \"✅ STAGE 3 COMPLETE\".",yes:"Yes"}
+ ],
+ script:[
+  {id:"s1",q:"Is this script approved, or do you want changes?",when:"After the script. Read the words out loud: do they sound like a real person talking? Is the first line catchy?",yes:"Yes, the script is approved."},
+  {id:"s2",q:"Is this storyboard plan approved? Should I now create the Complete Storyboard Image?",when:"After the shot table (shot numbers, what happens, what's said).",yes:"Yes, the storyboard plan is approved. Please create the Complete Storyboard Image."},
+  {id:"s3",q:"Approve this Complete Storyboard Image?",when:"After the storyboard picture. Every panel should be tall like a phone screen and show your character, product and location.",yes:"Yes, I approve this Complete Storyboard Image."},
+  {id:"s4",q:"Consistency check passed. Should I create the Final Flow AI Agent Master Prompt?",when:"After the consistency check report.",yes:"Yes, please create the Final Flow AI Agent Master Prompt."}
+ ]
+};
+const HELP=[
+ {id:"h1",q:"The image was blocked or failed",when:"ChatGPT sometimes refuses to draw young characters. The master prompt has a backup for this.",yes:"The image could not be generated. Please give me the READY-TO-USE IMAGE PROMPT and the SAFE ALTERNATIVE PROMPT so I can use another image tool.",noChg:true},
+ {id:"h2",q:"It skipped the Character Reference Sheet",when:"It asked to approve the character or moved to the product before showing the 8-view sheet.",yes:"You skipped the Character Reference Sheet. Follow RULE G3: generate the CHARACTER REFERENCE SHEET IMAGE (9:16, all 8 panels, same person) now.",noChg:true},
+ {id:"h3",q:"It jumped ahead without asking",when:"It started the next stage before you said yes.",yes:"Stop. Follow RULE G4: go back to the current stage and wait for my confirmation before moving on.",noChg:true},
+ {id:"h4",q:"It asked several questions at once",when:"",yes:"Follow RULE G5: ask only ONE question at a time.",noChg:true},
+ {id:"h5",q:"Two images got merged into one",when:"For example, the location sheet has storyboard boxes in it.",yes:"This image mixes two assets. Follow the FINAL ASSET CHECK: regenerate ONLY the incorrect asset as its own separate image.",noChg:true},
+ {id:"h6",q:"The product doesn't match your photo",when:"Wrong color, shape, logo or misspelled label.",yes:"The product does not match my uploaded image. Follow the PRODUCT LOCK: same shape, proportions, colors, logo and branding as my image. Regenerate the Product Reference Sheet.",noChg:true},
+ {id:"h7",q:"The character's face changed",when:"",yes:"The character's face changed. Keep the locked character identity exactly the same and regenerate this image.",noChg:true},
+ {id:"h8",q:"It's answering in another language",when:"",yes:"Please reply in English only.",noChg:true},
+ {id:"h9",q:"Change only the outfit",when:"Type the new outfit. The face, body, skin and hair stay the same (this wording comes from the master prompt).",tpl:"Keep the locked character exactly the same. Change only the outfit to: {x}",ph:"e.g. Oversized cream hoodie, light-wash jeans and white sneakers."}
+];
+
+const CLIPS=Array.from({length:12},(_,i)=>[String(i+1),"Clip "+(i+1),""]);
+const ISSUES=[
+ ["face","The face or hair changed","The person doesn't look like the character sheet."],
+ ["product","The product looks wrong","Wrong shape, color, logo or misspelled label."],
+ ["place","The room or place changed","Different furniture, walls or lighting from the location sheet."],
+ ["words","Wrong or cut-off words","The person says something different from the script."],
+ ["cinema","Looks like a TV ad, not a phone video","Too polished, fancy camera moves, movie colors."],
+ ["text","On-screen text is missing or wrong","Captions don't match the script."],
+ ["jump","Doesn't continue from the last clip","Clothes, product position or story jumps between clips."]
+];
+const FIX={
+ face:"The character's face or hair does not match the character reference sheet. Regenerate only this clip and keep the character identical to the tagged character reference.",
+ product:"The product does not match the product reference sheet. Regenerate only this clip and keep the product's shape, colors, logo and label text identical to the tagged product reference.",
+ place:"The location does not match the location reference sheet. Regenerate only this clip in the same location as the tagged location reference.",
+ words:"The spoken line does not match the script. Regenerate only this clip and use the exact line from the script.",
+ cinema:"This clip looks like a TV commercial. Regenerate only this clip as authentic smartphone UGC: handheld phone camera with slight natural movement, natural light, no cinematic camera moves or color grading.",
+ text:"The on-screen text does not match the script. Regenerate only this clip with the text overlays exactly as written in the script.",
+ jump:"This clip does not continue naturally from the previous clip. Regenerate only this clip and keep the outfit, product position, lighting and story state the same as the previous clip."
+};
+
+const FORMATS=[
+ ["Talking-head testimonial","The person talks straight to the phone camera about their experience."],
+ ["Problem → Solution demo","Shows an annoying problem, then the product fixing it."],
+ ["Unboxing / first impression","Opening the package and reacting to the product for the first time."],
+ ["\"Things I wish I knew\" listicle","A quick list of tips, with the product as one of them."],
+ ["Day-in-the-life integration","Follows the person's day; the product shows up naturally."],
+ ["Before / After transformation","How things looked before the product, then after."],
+ ["Get Ready With Me (GRWM)","The person gets ready (makeup, outfit) while chatting and using the product."],
+ ["Tutorial / How-to","Step-by-step: how to use the product."],
+ ["Reaction / honest review","Trying the product and giving an honest opinion."],
+ ["Storytime (\"So I tried...\")","Tells a short personal story about the product."],
+ ["POV format","Filmed as if you are seeing through someone's eyes. Caption starts with \"POV:\"."],
+ ["\"3 reasons why\" format","Three quick reasons to buy the product."],
+ ["Duet/stitch-style response","Replies to another video or comment, like on TikTok."],
+ ["ASMR product experience","Quiet video focused on satisfying sounds: pumps, sprays, taps."]
+];
+const GLOSS=[
+ ["Filming styles",[
+  ["Selfie handheld","The person holds the phone and films themselves."],
+  ["Tripod static / propped phone","The phone stands still on a tripod or shelf."],
+  ["POV","Point of view: we see through the person's eyes, often just hands and the product."],
+  ["Over-shoulder","Filmed from behind the person, looking at what they look at."],
+  ["Slight handheld movement","A little natural shake, so it feels real, not like a movie."]]],
+ ["Shot sizes",[
+  ["Close-up","A face or the product fills the screen."],
+  ["Medium shot","From the waist up."],
+  ["Wide shot","The whole person and the room."],
+  ["Product close-up in hand","The product held near the camera to show details."],
+  ["Framing","What's inside the picture and where things sit in it."],
+  ["Off-center","The face isn't exactly in the middle. Looks more natural."]]],
+ ["Ad words",[
+  ["Hook","The first 1–3 seconds. The line that stops people scrolling."],
+  ["CTA (call to action)","The ending that tells viewers what to do, like \"link's in my bio\"."],
+  ["Payoff","The satisfying result moment."],
+  ["Text overlay / caption","Words shown on screen on top of the video."],
+  ["Beat","One small moment or step in the script."],
+  ["Continuity","Things staying the same between shots: clothes, hair, product, room."],
+  ["9:16","Tall phone-screen shape (vertical)."],
+  ["Reference sheet","A picture showing the same person, product or place from several angles, so the AI keeps it the same."],
+  ["Storyboard","A comic-strip style plan: one picture per shot, in order."],
+  ["Lock / locked","Fixed. From now on the AI must not change it."]]]
+];
+
+/* ---------------- STATE ---------------- */
+const KEY="ugcpb-v1";
+function fresh(){return {...JSON.parse(JSON.stringify(DEF)),method:"A",product:"YES",location:"NO",concept:"2",duration:"45 seconds",clip:"1",issue:"product",issueExtra:"",chg:{},done:{},chk:{}}}
+let S=fresh();
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s&&typeof s==="object"){S=Object.assign(fresh(),s);if(!Array.isArray(S.acc))S.acc=[];if(!Array.isArray(S.pers))S.pers=[]}}catch(e){}}
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const CHEV='<svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6l4 4 4-4"/></svg>';
+
+/* ---------------- PICKERS ---------------- */
+const P={};
+function reg(id,c){P[id]=c}
+FIELDS.forEach(f=>{
+  if(f.type==="one")reg(f.k,{options:()=>f.opts.map(([v,d])=>({v,l:v,d})),get:()=>S[f.k],set:v=>S[f.k]=v});
+  if(f.sub&&f.sub.type==="one")reg(f.sub.k,{options:()=>f.sub.opts.map(([v,d])=>({v,l:v,d})),get:()=>S[f.sub.k],set:v=>S[f.sub.k]=v});
+});
+reg("clip",{options:()=>CLIPS.map(([v,l])=>({v,l,d:""})),get:()=>S.clip,set:v=>S.clip=v});
+reg("issue",{options:()=>ISSUES.map(([v,l,d])=>({v,l,d})),get:()=>S.issue,set:v=>S.issue=v});
+
+function refresh(id){
+  const c=P[id],val=c.get(),o=c.options().find(x=>x.v===val);
+  const trg=document.querySelector(`[data-pk="${id}"]`),d=document.querySelector(`[data-pkd="${id}"]`);
+  if(trg){trg.innerHTML=`<span class="pk-l">${esc(o?o.l:"Choose…")}</span>${CHEV}`;trg.setAttribute("aria-haspopup","listbox");trg.setAttribute("aria-expanded",cur&&cur.id===id?"true":"false")}
+  if(d)d.textContent=o?o.d:"";
+}
+const refreshAll=()=>Object.keys(P).forEach(refresh);
+
+const pop=$("pop"),popq=$("popq"),popl=$("popl");
+let cur=null,items=[],active=-1;
+function openPk(id,anchor){
+  if(cur&&cur.id===id){closePk();return}
+  closePk();
+  cur={id,anchor};anchor.setAttribute("aria-expanded","true");
+  popq.hidden=P[id].options().length<=8;popq.value="";
+  renderPop();pop.classList.add("open");place();
+  (popq.hidden?popl:popq).focus({preventScroll:true});
+  const s=popl.querySelector("li.active");if(s)s.scrollIntoView({block:"nearest"});
+}
+function closePk(refocus){
+  if(!cur)return;
+  cur.anchor.setAttribute("aria-expanded","false");pop.classList.remove("open");
+  if(refocus)cur.anchor.focus({preventScroll:true});
+  cur=null;
+}
+function renderPop(){
+  const c=P[cur.id],q=popq.value.trim().toLowerCase(),val=c.get();
+  items=c.options().filter(o=>!q||(o.l+" "+o.d).toLowerCase().includes(q));
+  active=Math.max(0,items.findIndex(o=>o.v===val));
+  popl.innerHTML=items.map((o,i)=>`<li class="opt${o.v===val?" sel":""}${i===active?" active":""}" role="option" data-i="${i}" aria-selected="${o.v===val}"><span class="o-l">${esc(o.l)}</span>${o.d?`<span class="o-d">${esc(o.d)}</span>`:""}</li>`).join("")||`<li class="empty">No match.</li>`;
+}
+function setActive(i,scroll){
+  const lis=popl.querySelectorAll("li.opt");if(!lis.length)return;
+  active=(i+lis.length)%lis.length;
+  lis.forEach(l=>l.classList.toggle("active",+l.dataset.i===active));
+  if(scroll)lis[active].scrollIntoView({block:"nearest"});
+}
+function choose(i){const c=P[cur.id],o=items[i];if(!o)return;const id=cur.id;closePk(true);c.set(o.v);refresh(id);build()}
+function place(){
+  if(!cur)return;
+  const r=cur.anchor.getBoundingClientRect(),vw=innerWidth,vh=innerHeight;
+  const w=Math.min(Math.max(r.width,320),vw-16),left=Math.min(Math.max(8,r.left),vw-w-8);
+  const below=vh-r.bottom-12,above=r.top-12,maxH=380;
+  pop.style.width=w+"px";pop.style.left=left+"px";
+  if(below>=Math.min(maxH,240)||below>=above){pop.style.maxHeight=Math.min(maxH,below)+"px";pop.style.top=(r.bottom+6)+"px"}
+  else{pop.style.maxHeight=Math.min(maxH,above)+"px";pop.style.top=Math.max(8,r.top-6-pop.offsetHeight)+"px"}
+}
+popl.tabIndex=-1;
+popl.addEventListener("mousemove",e=>{const li=e.target.closest("li.opt");if(li&&+li.dataset.i!==active)setActive(+li.dataset.i)});
+pop.addEventListener("keydown",e=>{
+  if(e.key==="ArrowDown"){e.preventDefault();setActive(active+1,true)}
+  else if(e.key==="ArrowUp"){e.preventDefault();setActive(active-1,true)}
+  else if(e.key==="Enter"){e.preventDefault();choose(active)}
+  else if(e.key==="Escape"){e.preventDefault();closePk(true)}
+  else if(e.key==="Tab"){closePk(true)}
+});
+popq.addEventListener("input",()=>{renderPop();place()});
+document.addEventListener("mousedown",e=>{if(cur&&!pop.contains(e.target)&&!cur.anchor.contains(e.target))closePk()});
+addEventListener("resize",place);
+addEventListener("scroll",e=>{if(cur&&!pop.contains(e.target))place()},true);
+
+/* ---------------- UI BUILD ---------------- */
+function fieldHTML(f){
+  const head=`<div class="lbl"><span class="fno">${f.n}.</span>${esc(f.label)}${f.max?` <span class="count" id="cnt-${f.k}"></span>`:""}</div>`;
+  let body="";
+  if(f.type==="text")body=`<input type="text" id="f-${f.k}" data-k="${f.k}" placeholder="${esc(f.ph||"")}" aria-label="${esc(f.label)}">`;
+  if(f.type==="one")body=`<button class="pk" type="button" data-pk="${f.k}" aria-label="${esc(f.label)}"></button><div class="desc" data-pkd="${f.k}"></div>`;
+  if(f.type==="many")body=`<div class="chips" role="group" aria-label="${esc(f.label)}">${f.opts.map(([v,d])=>`<button class="chip" type="button" data-many="${f.k}" data-v="${esc(v)}" aria-pressed="false"${d?` title="${esc(d)}"`:""}>${esc(v)}</button>`).join("")}</div><div class="desc" id="md-${f.k}"></div>`;
+  let sub="";
+  if(f.sub){
+    sub=`<div class="subf"><label class="lbl" for="f-${f.sub.k}">${esc(f.sub.label)} <small>(optional)</small></label>`;
+    if(f.sub.type==="text")sub+=`<input type="text" id="f-${f.sub.k}" data-k="${f.sub.k}" placeholder="${esc(f.sub.ph||"")}">`;
+    else sub=`<div class="subf"><div class="lbl">${esc(f.sub.label)}</div><button class="pk" type="button" data-pk="${f.sub.k}" aria-label="${esc(f.sub.label)}"></button><div class="desc" data-pkd="${f.sub.k}"></div>`;
+    sub+=`</div>`;
+  }
+  const help=f.help?`<div class="desc">${esc(f.help)}</div>`:"";
+  const wide=f.type==="many"?` style="grid-column:1/-1"`:"";
+  return `<div class="field"${wide}>${head}${body}${f.type!=="one"?help:""}${sub}${f.type==="one"?help:""}</div>`;
+}
+$("form").innerHTML=FIELDS.map(fieldHTML).join("");
+
+document.querySelectorAll("[data-choice]").forEach(el=>{
+  const k=el.dataset.choice;
+  el.innerHTML=CHOICES[k].map(([v,l,d])=>`<button class="choice" type="button" data-ck="${k}" data-v="${esc(v)}" aria-pressed="false"><b>${esc(l)}</b>${d?`<span>${esc(d)}</span>`:""}</button>`).join("");
+});
+
+function gateHTML(g){
+  const chg=g.noChg?"":`<input type="text" id="chg-${g.id}" data-chg="${g.id}" placeholder="${esc(g.ph||"Want changes? Describe them here (optional)")}" aria-label="Changes for: ${esc(g.q)}">`;
+  return `<div class="gate"><p class="q">${g.tpl||g.noChg?`<b>${esc(g.q)}</b>`:`ChatGPT asks: <q>${esc(g.q)}</q>`}</p>${g.when?`<p class="when">${esc(g.when)}</p>`:""}${chg}
+   <div class="send"><div class="sh"><span>${g.noChg||g.tpl?"Send this":"Reply"}</span><button class="b primary" type="button" data-copy="gp-${g.id}">Copy</button></div><pre id="gp-${g.id}"></pre></div></div>`;
+}
+function renderGates(){
+  $("g-char").innerHTML=(S.method==="B"?GATES.charB:GATES.charA).map(gateHTML).join("");
+  $("g-product").innerHTML=GATES.product.map(gateHTML).join("");
+  $("g-location").innerHTML=GATES.location.map(gateHTML).join("");
+  $("g-script").innerHTML=GATES.script.map(gateHTML).join("");
+  $("g-help").innerHTML=HELP.map(gateHTML).join("");
+  document.querySelectorAll("[data-chg]").forEach(i=>i.value=S.chg[i.dataset.chg]||"");
+}
+$("formats").innerHTML=FORMATS.map(([t,d])=>`<div><b>${esc(t)}:</b> ${esc(d)}</div>`).join("");
+$("gloss").innerHTML=GLOSS.map(([t,l])=>`<h3>${esc(t)}</h3>`+l.map(([a,b])=>`<div><b>${esc(a)}:</b> ${esc(b)}</div>`).join("")).join("");
+
+const STEPS=[["start","Paste the master prompt"],["method","New or own character"],["form","Describe the character","A"],["upload","Upload character photos","B"],["charok","Approve the character"],["product","Product"],["location","Location"],["concept","Pick an ad idea"],["duration","Ad length"],["script","Script and storyboard"],["final","Copy the final prompt"],["flow","Google Flow"],["edit","Edit in CapCut"]];
+$("nav").innerHTML=STEPS.map(([id,t])=>`<li data-nav="${id}"><input type="checkbox" id="nv-${id}" data-navchk="${id}" aria-label="Done: ${esc(t)}"><a href="#s-${id}">${esc(t)}</a></li>`).join("");
+
+/* ---------------- PROMPTS ---------------- */
+const master=document.getElementById("master").textContent.replace(/^\n/,"");
+$("masterPre").textContent=master;
+$("masterMeta").textContent=`${master.split(/\s+/).filter(Boolean).length.toLocaleString()} words. Copied exactly as written in the master prompt document.`;
+
+function formReply(){
+  const L=[];
+  FIELDS.forEach(f=>{
+    let v=S[f.k];
+    if(f.type==="many")v=v.length?v.join(", "):"None";
+    if(f.type==="text")v=v.trim()||"(skip)";
+    L.push(`${f.n}. ${f.label}: ${v}`);
+    if(f.sub){const s=String(S[f.sub.k]||"").trim();if(s)L.push(`   ${f.sub.label}: ${s}`)}
+  });
+  return L.join("\n");
+}
+function gateText(g){
+  const x=(S.chg[g.id]||"").trim();
+  if(g.tpl)return x?g.tpl.replace("{x}",x):g.tpl.replace("{x}","[describe the new outfit]");
+  if(g.noChg)return g.yes;
+  return x?`No. Please make these changes and show it again: ${x}`:g.yes;
+}
+function build(){
+  const lab=(k,v)=>(CHOICES[k].find(c=>c[0]===v)||[,""])[1];
+  $("outMethod").textContent=lab("method",S.method);
+  $("outForm").textContent=formReply();
+  $("outProduct").textContent=lab("product",S.product);
+  $("outLocation").textContent=lab("location",S.location);
+  $("outConcept").textContent=`Concept ${S.concept}`;
+  $("outDuration").textContent=S.duration;
+  $("productTip").innerHTML=S.product==="YES"?"<b>Next:</b> ChatGPT asks you to upload the product images. Upload all your product photos in one message.":"<b>Note:</b> ChatGPT will not make a product sheet until you upload a photo. Google Flow needs that sheet, so upload one before stage 11.";
+  $("locationTip").innerHTML=S.location==="YES"?"<b>Next:</b> upload your location photo. ChatGPT keeps the same room, furniture and layout.":"ChatGPT designs the place itself. It picks a lived-in, everyday American location (bedroom, bathroom, kitchen, car…) with natural light.";
+  [...Object.values(GATES).flat(),...HELP].forEach(g=>{const el=$("gp-"+g.id);if(el)el.textContent=gateText(g)});
+  const extra=S.issueExtra.trim();
+  $("outFix").textContent=`Clip ${S.clip}: ${FIX[S.issue]}${extra?" "+extra.replace(/([^.!?])$/,"$1."):""}`;
+
+  // visibility
+  const B=S.method==="B";
+  $("s-form").classList.toggle("off",B);$("s-upload").classList.toggle("off",!B);
+  document.querySelector('[data-nav="form"]').classList.toggle("off",B);
+  document.querySelector('[data-nav="upload"]').classList.toggle("off",!B);
+  // choices
+  document.querySelectorAll("[data-ck]").forEach(b=>b.setAttribute("aria-pressed",String(S[b.dataset.ck]===b.dataset.v)));
+  // multi chips
+  FIELDS.filter(f=>f.type==="many").forEach(f=>{
+    const sel=S[f.k];
+    document.querySelectorAll(`[data-many="${f.k}"]`).forEach(b=>{
+      const on=sel.includes(b.dataset.v);b.setAttribute("aria-pressed",String(on));
+      b.disabled=!!f.max&&!on&&sel.length>=f.max;
+    });
+    if(f.max)$("cnt-"+f.k).textContent=`(${sel.length} of ${f.max})`;
+    const descs=sel.map(v=>{const o=f.opts.find(x=>x[0]===v);return o&&o[1]?`${v}: ${o[1]}`:""}).filter(Boolean);
+    $("md-"+f.k).textContent=descs.join(" · ");
+  });
+  // progress
+  const vis=STEPS.filter(([id,,m])=>!m||m===S.method);
+  const n=vis.filter(([id])=>S.done[id]).length;
+  $("progBar").style.width=(n/vis.length*100)+"%";$("progTxt").textContent=`${n} of ${vis.length} done`;
+  STEPS.forEach(([id])=>{
+    const on=!!S.done[id];
+    $("nv-"+id).checked=on;document.querySelector(`[data-nav="${id}"]`).classList.toggle("done",on);
+    const sec=$("s-"+id);sec.classList.toggle("done",on);
+    const b=sec.querySelector("[data-done]");if(b)b.textContent=on?"Done ✓ (click to undo)":"Mark step done";
+  });
+  document.querySelectorAll("[data-chk]").forEach(c=>c.checked=!!S.chk[c.dataset.chk]);
+  // summary
+  $("summary").textContent=[
+   `Character: ${B?"your own photos":`${S.gender}, ${S.age}, ${S.demo}`}`,
+   B?"":`Look: ${S.skin} skin, ${S.eyes} eyes, ${S.hairC} ${S.hairS.toLowerCase()} hair`,
+   B?"":`Style: ${S.outfit}, ${S.content}`,
+   `Product photo: ${S.product==="YES"?"now":"later"}`,
+   `Location: ${S.location==="YES"?"your photo":"ChatGPT creates it"}`,
+   `Ad idea: #${S.concept}`,
+   `Length: ${S.duration}`
+  ].filter(Boolean).join("\n");
+  save();
+}
+
+/* ---------------- EVENTS ---------------- */
+async function copy(text,btn){
+  let ok=false;
+  try{await navigator.clipboard.writeText(text);ok=true}catch(e){
+    const t=document.createElement("textarea");t.value=text;t.style.position="fixed";t.style.opacity="0";document.body.appendChild(t);t.select();
+    try{ok=document.execCommand("copy")}catch(_){}t.remove();
+  }
+  const old=btn.dataset.label||btn.textContent;btn.dataset.label=old;
+  btn.textContent=ok?"Copied ✓":"Select and copy by hand";btn.classList.toggle("copied",ok);
+  clearTimeout(btn._t);btn._t=setTimeout(()=>{btn.textContent=old;btn.classList.remove("copied")},1800);
+}
+document.addEventListener("click",e=>{
+  const pk=e.target.closest("[data-pk]");if(pk){e.preventDefault();openPk(pk.dataset.pk,pk);return}
+  const li=e.target.closest("#popl li.opt");if(li){choose(+li.dataset.i);return}
+  const cp=e.target.closest("[data-copy]");
+  if(cp){const id=cp.dataset.copy;copy(id==="master"?master:$(id).textContent,cp);return}
+  const ch=e.target.closest("[data-ck]");
+  if(ch){const k=ch.dataset.ck,was=S.method;S[k]=ch.dataset.v;if(k==="method"&&was!==S.method)renderGates();build();return}
+  const m=e.target.closest("[data-many]");
+  if(m){
+    const k=m.dataset.many,v=m.dataset.v,arr=S[k];
+    if(arr.includes(v))S[k]=arr.filter(x=>x!==v);
+    else if(k==="acc")S[k]=v==="None"?["None"]:[...arr.filter(x=>x!=="None"),v];
+    else S[k]=[...arr,v];
+    build();return;
+  }
+  const d=e.target.closest("[data-done]");if(d){const k=d.dataset.done;S.done[k]=!S.done[k];build();return}
+});
+document.addEventListener("keydown",e=>{
+  const t=e.target.closest&&e.target.closest("[data-pk]");
+  if(t&&(e.key==="ArrowDown"||e.key==="ArrowUp")&&!cur){e.preventDefault();openPk(t.dataset.pk,t)}
+});
+document.addEventListener("input",e=>{
+  const k=e.target.dataset.k;if(k){S[k]=e.target.value;build();return}
+  const c=e.target.dataset.chg;if(c!=null){S.chg[c]=e.target.value;build()}
+});
+document.addEventListener("change",e=>{
+  const n=e.target.dataset.navchk;if(n){S.done[n]=e.target.checked;build();return}
+  const c=e.target.dataset.chk;if(c){S.chk[c]=e.target.checked;save()}
+});
+function syncInputs(){document.querySelectorAll("[data-k]").forEach(i=>i.value=S[i.dataset.k]||"")}
+$("resetAll").onclick=function(){
+  if(this.dataset.arm!=="1"){this.dataset.arm="1";this.textContent="Click again to clear everything";setTimeout(()=>{this.dataset.arm="";this.textContent="Start a new ad"},3000);return}
+  this.dataset.arm="";this.textContent="Start a new ad";
+  S=fresh();syncInputs();renderGates();refreshAll();build();scrollTo({top:0});
+};
+(function(){
+  let t=null;try{t=localStorage.getItem("ugcpb-theme")}catch(e){}
+  if(t)document.documentElement.dataset.theme=t;
+  $("themeBtn").onclick=()=>{
+    const c=document.documentElement.dataset.theme||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");
+    const nx=c==="dark"?"light":"dark";document.documentElement.dataset.theme=nx;
+    try{localStorage.setItem("ugcpb-theme",nx)}catch(e){}
+  };
+})();
+
+/* ---------------- INIT ---------------- */
+load();syncInputs();renderGates();refreshAll();build();
+</script>
+
+</body>
+</html>
