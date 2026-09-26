@@ -150,13 +150,19 @@ details summary{cursor:pointer;font-weight:600}
 .gloss{display:grid;gap:6px 18px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));font-size:13px;margin-top:10px}
 .gloss h3{grid-column:1/-1;font-size:14px;margin:14px 0 2px}
 .markdone{margin-top:16px;display:flex;justify-content:flex-end}
+.chg{font-size:12.5px;padding:10px 0;border-top:1px solid var(--border);display:grid;gap:4px}
+.chg:first-child{border-top:0}
+.chg pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.5 var(--mono);margin:0;padding:6px 8px;border-radius:6px;background:var(--field)}
+.chg .was{color:var(--muted);text-decoration:line-through}
+.chg .now{border-left:3px solid var(--accent)}
 </style>
 </head>
 <body>
 <header>
   <div>
     <h1>UGC Ad Prompt Builder</h1>
-    <p>Pick options, copy each ready-made message, and paste it into ChatGPT when it asks. The master prompt is copied word for word. Your choices only fill in the replies. At the end, the steps walk you through Google Flow and CapCut.</p>
+    <p>Pick options, copy each ready-made message, and paste it into ChatGPT when it asks. For the US, the master prompt is copied word for word; the Bangladesh version changes only the audience, place and language wording. At the end, the steps walk you through Google Flow and CapCut.</p>
+    <p class="meta">Updated 26 September 2026</p>
   </div>
   <div class="btns"><button class="b" id="resetAll" type="button">Start a new ad</button><button class="b" id="themeBtn" type="button">Light / dark</button></div>
 </header>
@@ -166,8 +172,16 @@ details summary{cursor:pointer;font-weight:600}
 
 <section id="s-start" data-step="start">
   <p class="stage">Before you start</p>
-  <h2><span class="n">0</span>Paste the master prompt into ChatGPT</h2>
+  <h2><span class="n">0</span>Choose the market and paste the master prompt</h2>
   <p class="sub">Open ChatGPT, start a new chat and turn on <b>Thinking</b> mode. Then copy the master prompt and send it. ChatGPT will answer with one question. Come back here for the reply.</p>
+  <div class="note"><b>What you need:</b> a paid ChatGPT plan (so it can make images) and access to Google Flow (part of Google's paid AI plans). CapCut or any video editor for the last step.</div>
+  <h3>Who is the ad for?</h3>
+  <div class="choices" data-choice="market"></div>
+  <div id="langWrap">
+    <h3>What language does the creator speak?</h3>
+    <div class="choices" data-choice="lang"></div>
+  </div>
+  <h3>Before you paste</h3>
   <ul class="checklist">
     <li><input type="checkbox" id="pre1" data-chk="pre1"><label for="pre1"><b>Have your product photos ready.</b><span class="d">Clear photos from several sides (front, back, sides, label). The official website of the product is a good source.</span></label></li>
     <li><input type="checkbox" id="pre2" data-chk="pre2"><label for="pre2"><b>Optional: a photo of your character or location.</b><span class="d">Only if you already have a person or a room you want to use. Otherwise ChatGPT creates them.</span></label></li>
@@ -175,6 +189,7 @@ details summary{cursor:pointer;font-weight:600}
   </ul>
   <div class="send"><div class="sh"><span>Send this first</span><button class="b primary" type="button" data-copy="master">Copy master prompt</button></div><pre id="masterPre" style="max-height:260px"></pre></div>
   <p class="meta" id="masterMeta"></p>
+  <details id="changes" style="margin-top:10px"><summary id="changesSum"></summary><div id="changesList"></div></details>
   <div class="markdone"><button class="b" type="button" data-done="start">Mark step done</button></div>
 </section>
 
@@ -1887,7 +1902,46 @@ const FIELDS=[
 ];
 const DEF={name:"",gender:"Female",age:"18–24",demo:"White / European-American",demoX:"",skin:"Porcelain",under:"Cool",eyes:"Brown",hairC:"Dark Brown",hairS:"Straight",hairX:"",body:"Slim",height:"Average Height",buildX:"",outfit:"Premium Casual",outfitX:"",acc:[],accX:"",pers:["Friendly","Warm"],content:"Skincare",expr:"Friendly",pres:"Full Body"};
 
+/* ---------------- BANGLADESH VERSION ---------------- */
+/* Bangladesh mode swaps only these options and the wording in BD_SWAPS below. US mode uses the master prompt untouched. */
+const DEMO_BD=[["Bangladeshi (Bengali)","The majority look in Bangladesh."],["Bangladeshi Indigenous (Chakma, Marma, Garo…)","Indigenous communities, mostly from the hill tracts and the north."],["South Asian (other)","Indian, Pakistani, Sri Lankan, Nepali and similar."],["East Asian","Chinese, Japanese, Korean and similar."],["White / European","European ancestry."],["Black / African","African ancestry."],["Middle Eastern","Arab, Persian, Turkish and similar."],["Mixed / Multiracial","More than one background."]];
+const TRAD=["Traditional (saree / salwar kameez / panjabi)","Bangladeshi traditional wear. Describe the exact outfit below if you like."];
+const DEF_BD={...DEF,age:"25–34",demo:"Bangladeshi (Bengali)",skin:"Light-Medium",under:"Warm",eyes:"Dark Brown",hairC:"Black",hairS:"Long",hairX:"Long straight black hair, loosely tied back",body:"Average",outfit:TRAD[0],outfitX:"Soft pastel cotton salwar kameez",pers:["Friendly","Relatable","Warm"]};
+const LANGS={
+ banglish:{l:"Banglish",d:"Everyday Bangla mixed with English words, the way most Dhaka creators talk. Recommended.",long:"casual Banglish (everyday Bangla mixed with common English words, the way Dhaka creators talk)",short:"Banglish (everyday Bangla mixed with common English words)"},
+ bangla:{l:"Bangla",d:"Fully in Bangla. Test one short clip first: AI lip-sync may be weaker in Bangla.",long:"natural spoken Bangla",short:"spoken Bangla"},
+ english:{l:"English",d:"English with natural Bangladeshi phrasing. On-screen captions stay in English.",long:"English with natural Bangladeshi phrasing",short:"English with natural Bangladeshi phrasing"}
+};
+const DEMO_US_BLOCK=["White / European-American","Black / African-American","East Asian-American","South Asian-American","Latina / Hispanic-American","Middle Eastern-American","Southeast Asian-American","Native American","Pacific Islander-American","Mixed / Multiracial"].map(x=>"- "+x).join("\n");
+function bdSwaps(){
+  const L=LANGS[S.lang]||LANGS.banglish;
+  const s=[
+   ["Audience","for a modern American audience, optimized for TikTok, Instagram Reels, and YouTube Shorts.","for a modern Bangladeshi audience, optimized for Facebook Reels, TikTok, Instagram Reels, and YouTube Shorts."],
+   ["Character appearance options",DEMO_US_BLOCK,DEMO_BD.map(o=>"- "+o[0]).join("\n")],
+   ["Outfit options","- Evening\n- Denim Casual\n","- Evening\n- Denim Casual\n- "+TRAD[0]+"\n"],
+   ["Location","- Everyday real American environment (bedroom, kitchen, bathroom,\n  car, gym, park, home office, dorm, coffee shop)","- Everyday real Bangladeshi environment (bedroom, kitchen, bathroom,\n  car, gym, park, home office, hostel, café)"],
+   ["Ad ideas audience","US audience on TikTok / Reels / Shorts.","Bangladeshi audience on Facebook / TikTok / Reels / Shorts."],
+   ["Settings, names and language","Use natural American settings, situations, names, and modern casual\nAmerican English — the way real creators actually talk.","Use natural Bangladeshi settings, situations, names, and\n"+L.long+" — the way real creators actually talk."],
+   ["Script language","- Use casual, conversational, contemporary American English —","- Use casual, conversational, contemporary "+L.short+" —"]
+  ];
+  if(S.lang!=="english")s.push(["On-screen captions","  beat, in the style of native platform captions.\n","  beat, in the style of native platform captions.\n- Write all ON-SCREEN TEXT OVERLAYS in Bangla script.\n"]);
+  return s;
+}
+function variant(){
+  if(S.market!=="BD")return {text:master,changes:[],missing:[]};
+  let t=master;const changes=[],missing=[];
+  bdSwaps().forEach(([name,from,to])=>{
+    const i=t.indexOf(from);
+    if(i<0||t.indexOf(from,i+1)>=0){missing.push(name);return}
+    t=t.slice(0,i)+to+t.slice(i+from.length);changes.push({name,from,to});
+  });
+  return {text:t,changes,missing};
+}
+const optsOf=f=>S.market==="BD"&&f.k==="demo"?DEMO_BD:S.market==="BD"&&f.k==="outfit"?[...f.opts,TRAD]:f.opts;
+
 const CHOICES={
+ market:[["US","United States (original)","The master prompt exactly as written: American creator, homes and English."],["BD","Bangladesh","Bangladeshi creator, places and names, with Facebook added. Only the audience, place and language wording changes."]],
+ lang:Object.entries(LANGS).map(([k,v])=>[k,v.l,v.d]),
  method:[["A","A — GENERATE A NEW CHARACTER","ChatGPT designs a new person from the form in the next step."],["B","B — UPLOAD AN EXISTING CHARACTER","You already have photos of a person (yourself, an AI character you made before). Up to 10 photos."]],
  product:[["YES","YES — I will provide the product image.","Recommended. You upload your product photos right after this."],["NO","NO — I will provide the product image later.","ChatGPT continues but won't make a product sheet until you upload a photo."]],
  location:[["YES","YES — I will provide the location image.","You have a photo of the room or place you want."],["NO","NO — Create the location yourself.","ChatGPT designs a real-looking place that fits the product. Used in the video."]],
@@ -1999,7 +2053,7 @@ const GLOSS=[
 
 /* ---------------- STATE ---------------- */
 const KEY="ugcpb-v1";
-function fresh(){return {...JSON.parse(JSON.stringify(DEF)),method:"A",product:"YES",location:"NO",concept:"2",duration:"45 seconds",clip:"1",issue:"product",issueExtra:"",chg:{},done:{},chk:{}}}
+function fresh(){return {...JSON.parse(JSON.stringify(DEF)),market:"US",lang:"banglish",touched:false,method:"A",product:"YES",location:"NO",concept:"2",duration:"45 seconds",clip:"1",issue:"product",issueExtra:"",chg:{},done:{},chk:{}}}
 let S=fresh();
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 function load(){try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s&&typeof s==="object"){S=Object.assign(fresh(),s);if(!Array.isArray(S.acc))S.acc=[];if(!Array.isArray(S.pers))S.pers=[]}}catch(e){}}
@@ -2012,8 +2066,8 @@ const CHEV='<svg class="chev" viewBox="0 0 16 16" fill="none" stroke="currentCol
 const P={};
 function reg(id,c){P[id]=c}
 FIELDS.forEach(f=>{
-  if(f.type==="one")reg(f.k,{options:()=>f.opts.map(([v,d])=>({v,l:v,d})),get:()=>S[f.k],set:v=>S[f.k]=v});
-  if(f.sub&&f.sub.type==="one")reg(f.sub.k,{options:()=>f.sub.opts.map(([v,d])=>({v,l:v,d})),get:()=>S[f.sub.k],set:v=>S[f.sub.k]=v});
+  if(f.type==="one")reg(f.k,{options:()=>optsOf(f).map(([v,d])=>({v,l:v,d})),get:()=>S[f.k],set:v=>{S[f.k]=v;S.touched=true}});
+  if(f.sub&&f.sub.type==="one")reg(f.sub.k,{options:()=>f.sub.opts.map(([v,d])=>({v,l:v,d})),get:()=>S[f.sub.k],set:v=>{S[f.sub.k]=v;S.touched=true}});
 });
 reg("clip",{options:()=>CLIPS.map(([v,l])=>({v,l,d:""})),get:()=>S.clip,set:v=>S.clip=v});
 reg("issue",{options:()=>ISSUES.map(([v,l,d])=>({v,l,d})),get:()=>S.issue,set:v=>S.issue=v});
@@ -2125,8 +2179,6 @@ $("nav").innerHTML=STEPS.map(([id,t])=>`<li data-nav="${id}"><input type="checkb
 
 /* ---------------- PROMPTS ---------------- */
 const master=document.getElementById("master").textContent.replace(/^\n/,"");
-$("masterPre").textContent=master;
-$("masterMeta").textContent=`${master.split(/\s+/).filter(Boolean).length.toLocaleString()} words. Copied exactly as written in the master prompt document.`;
 
 function formReply(){
   const L=[];
@@ -2146,6 +2198,15 @@ function gateText(g){
   return x?`No. Please make these changes and show it again: ${x}`:g.yes;
 }
 function build(){
+  const V=variant(),BD=S.market==="BD";
+  if($("masterPre").textContent!==V.text)$("masterPre").textContent=V.text;
+  const words=V.text.split(/\s+/).filter(Boolean).length.toLocaleString();
+  $("masterMeta").textContent=BD?`${words} words. Bangladesh version: ${V.changes.length} places changed from the original master prompt. Everything else is word for word.`:`${words} words. Copied exactly as written in the master prompt document.`;
+  if(V.missing.length)$("masterMeta").textContent+=` Warning: could not update ${V.missing.join(", ")}.`;
+  $("changes").hidden=!BD;
+  $("changesSum").textContent=`See the ${V.changes.length} changes`;
+  $("changesList").innerHTML=V.changes.map(c=>`<div class="chg"><b>${esc(c.name)}</b><pre class="was">${esc(c.from)}</pre><pre class="now">${esc(c.to)}</pre></div>`).join("");
+  $("langWrap").hidden=!BD;
   const lab=(k,v)=>(CHOICES[k].find(c=>c[0]===v)||[,""])[1];
   $("outMethod").textContent=lab("method",S.method);
   $("outForm").textContent=formReply();
@@ -2154,7 +2215,7 @@ function build(){
   $("outConcept").textContent=`Concept ${S.concept}`;
   $("outDuration").textContent=S.duration;
   $("productTip").innerHTML=S.product==="YES"?"<b>Next:</b> ChatGPT asks you to upload the product images. Upload all your product photos in one message.":"<b>Note:</b> ChatGPT will not make a product sheet until you upload a photo. Google Flow needs that sheet, so upload one before stage 11.";
-  $("locationTip").innerHTML=S.location==="YES"?"<b>Next:</b> upload your location photo. ChatGPT keeps the same room, furniture and layout.":"ChatGPT designs the place itself. It picks a lived-in, everyday American location (bedroom, bathroom, kitchen, car…) with natural light.";
+  $("locationTip").innerHTML=S.location==="YES"?"<b>Next:</b> upload your location photo. ChatGPT keeps the same room, furniture and layout.":`ChatGPT designs the place itself. It picks a lived-in, everyday ${BD?"Bangladeshi":"American"} location (bedroom, bathroom, kitchen, car…) with natural light.`;
   [...Object.values(GATES).flat(),...HELP].forEach(g=>{const el=$("gp-"+g.id);if(el)el.textContent=gateText(g)});
   const extra=S.issueExtra.trim();
   $("outFix").textContent=`Clip ${S.clip}: ${FIX[S.issue]}${extra?" "+extra.replace(/([^.!?])$/,"$1."):""}`;
@@ -2190,6 +2251,7 @@ function build(){
   document.querySelectorAll("[data-chk]").forEach(c=>c.checked=!!S.chk[c.dataset.chk]);
   // summary
   $("summary").textContent=[
+   `Market: ${BD?`Bangladesh, ${LANGS[S.lang].l}`:"United States (original)"}`,
    `Character: ${B?"your own photos":`${S.gender}, ${S.age}, ${S.demo}`}`,
    B?"":`Look: ${S.skin} skin, ${S.eyes} eyes, ${S.hairC} ${S.hairS.toLowerCase()} hair`,
    B?"":`Style: ${S.outfit}, ${S.content}`,
@@ -2216,16 +2278,21 @@ document.addEventListener("click",e=>{
   const pk=e.target.closest("[data-pk]");if(pk){e.preventDefault();openPk(pk.dataset.pk,pk);return}
   const li=e.target.closest("#popl li.opt");if(li){choose(+li.dataset.i);return}
   const cp=e.target.closest("[data-copy]");
-  if(cp){const id=cp.dataset.copy;copy(id==="master"?master:$(id).textContent,cp);return}
+  if(cp){const id=cp.dataset.copy;copy(id==="master"?variant().text:$(id).textContent,cp);return}
   const ch=e.target.closest("[data-ck]");
-  if(ch){const k=ch.dataset.ck,was=S.method;S[k]=ch.dataset.v;if(k==="method"&&was!==S.method)renderGates();build();return}
+  if(ch){
+    const k=ch.dataset.ck,was=S[k];S[k]=ch.dataset.v;
+    if(k==="method"&&was!==S[k])renderGates();
+    if(k==="market"&&was!==S[k])switchMarket();
+    build();return;
+  }
   const m=e.target.closest("[data-many]");
   if(m){
     const k=m.dataset.many,v=m.dataset.v,arr=S[k];
     if(arr.includes(v))S[k]=arr.filter(x=>x!==v);
     else if(k==="acc")S[k]=v==="None"?["None"]:[...arr.filter(x=>x!=="None"),v];
     else S[k]=[...arr,v];
-    build();return;
+    S.touched=true;build();return;
   }
   const d=e.target.closest("[data-done]");if(d){const k=d.dataset.done;S.done[k]=!S.done[k];build();return}
 });
@@ -2234,18 +2301,24 @@ document.addEventListener("keydown",e=>{
   if(t&&(e.key==="ArrowDown"||e.key==="ArrowUp")&&!cur){e.preventDefault();openPk(t.dataset.pk,t)}
 });
 document.addEventListener("input",e=>{
-  const k=e.target.dataset.k;if(k){S[k]=e.target.value;build();return}
+  const k=e.target.dataset.k;if(k){S[k]=e.target.value;if(k in DEF)S.touched=true;build();return}
   const c=e.target.dataset.chg;if(c!=null){S.chg[c]=e.target.value;build()}
 });
 document.addEventListener("change",e=>{
   const n=e.target.dataset.navchk;if(n){S.done[n]=e.target.checked;build();return}
   const c=e.target.dataset.chk;if(c){S.chk[c]=e.target.checked;save()}
 });
+function switchMarket(){
+  const d=S.market==="BD"?DEF_BD:DEF;
+  if(!S.touched)Object.assign(S,JSON.parse(JSON.stringify(d)));
+  else FIELDS.filter(f=>f.type==="one").forEach(f=>{if(!optsOf(f).some(o=>o[0]===S[f.k]))S[f.k]=d[f.k]});
+  syncInputs();refreshAll();
+}
 function syncInputs(){document.querySelectorAll("[data-k]").forEach(i=>i.value=S[i.dataset.k]||"")}
 $("resetAll").onclick=function(){
   if(this.dataset.arm!=="1"){this.dataset.arm="1";this.textContent="Click again to clear everything";setTimeout(()=>{this.dataset.arm="";this.textContent="Start a new ad"},3000);return}
   this.dataset.arm="";this.textContent="Start a new ad";
-  S=fresh();syncInputs();renderGates();refreshAll();build();scrollTo({top:0});
+  const m=S.market,l=S.lang;S=fresh();S.market=m;S.lang=l;if(m==="BD")Object.assign(S,JSON.parse(JSON.stringify(DEF_BD)));syncInputs();renderGates();refreshAll();build();scrollTo({top:0});
 };
 (function(){
   let t=null;try{t=localStorage.getItem("ugcpb-theme")}catch(e){}
