@@ -9,6 +9,7 @@ Open `index.html` in any browser. No install is needed.
 2. Copy the master prompt and paste it into a new ChatGPT chat (Thinking mode on). This is your **main chat**.
 3. Each time ChatGPT asks a question, pick your options on the page and copy the ready-made reply.
 4. For the character, product and location, the main chat gives you a **side-chat brief**. Paste it into a new chat, add your photos and approve the sheet there. Then bring the sheet image and its short **Handoff Card** back to the main chat.
+   Already have photos? Each of these steps has a **sheet builder** button. It opens the matching template (Character 6 views, Expression 6 faces, Product 8 panels, Location 6 panels), lets you put a photo in each panel, move and zoom it, and download the sheet as a 9:16 PNG (1440 × 2560) with only small panel numbers on it. The photos never leave your browser. Then paste the brief in a side chat with the ready-made message the builder gives you, attach the PNG, and get the Handoff Card.
 5. The main chat writes the script and draws the storyboards, up to 6 shots each. Type **Next** for each further storyboard.
 6. Follow the Google Flow and CapCut checklists to make and edit the video, using one short Flow prompt per storyboard.
 
