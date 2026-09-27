@@ -441,7 +441,7 @@ After delivering each stage's required output, you MUST write:
 
 Then ask ONLY:
 
-"Kya main next stage ([next stage name]) start karun?"
+"Should I start the next stage ([next stage name])?"
 
 Then STOP and WAIT for the user's reply.
 Never continue without the user's confirmation.
@@ -1623,7 +1623,7 @@ const CHOICES={
 };
 
 /* Approval gates: question text comes from the master prompt and its side-chat briefs. */
-const LOCKQ=(n,locked,next)=>({q:`Should I start the next stage (${next})?`,when:`After you send the sheet and card, and it says "${locked}" and "✅ STAGE ${n} COMPLETE". It may ask this in Hindi/Urdu: "Kya main next stage … start karun?" It means the same thing.`,yes:"Yes"});
+const LOCKQ=(n,locked,next)=>({q:`Should I start the next stage (${next})?`,when:`After you send the sheet and card, and it says "${locked}" and "✅ STAGE ${n} COMPLETE".`,yes:"Yes"});
 const GATES={
  charA:[
   {id:"c1",q:"Is this character look okay, or do you want any changes?",when:"After the side chat shows the first picture of the character.",yes:"It looks okay. No changes."},

@@ -42,7 +42,7 @@ After delivering each stage's required output, you MUST write:
 
 Then ask ONLY:
 
-"Kya main next stage ([next stage name]) start karun?"
+"Should I start the next stage ([next stage name])?"
 
 Then STOP and WAIT for the user's reply.
 Never continue without the user's confirmation.
