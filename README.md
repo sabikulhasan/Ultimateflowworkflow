@@ -23,6 +23,24 @@ The video has no subtitles, captions, on-screen text or music. Storyboard pictur
 
 For the US, the master prompt (`master-prompt.txt`) is used word for word. The Bangladesh version changes only the audience, character appearance and outfit options, location, and language wording, The page lists every change under "See the changes". Your choices and progress are saved in your browser.
 
+## Commercial Ad Prompt Builder (Ads mode)
+
+Use the **UGC | Ads** switch at the top of the page, or open `ads.html` (the link `index.html#ads` opens it too). The site remembers which mode you used last.
+
+Ads mode is for fast-cut commercials: many cuts, flashy transitions, sound effects and on-screen text. Everything is on one page:
+
+1. **Market and language:** US or Bangladesh; Banglish, Bangla or English for anything said on camera; an optional voiceover; 9:16 (default) or 16:9.
+2. **Product and brand:** product, audience, model, brand name, call to action and offer. Optional product and character sheet builders (the same ones UGC mode uses) help keep the product the same across many cuts.
+3. **Length, pace and style:** 6, 15, 30, 45 or 60 seconds; Cinematic, Punchy or Hyper pace; 6, 12 (default), 18 or 24 frames. Quick-start chips suggest good format + style + pace combinations for each category.
+4. **Shot list:** every frame has its length, shot, angle, camera move, in-scene sound, the transition to the next frame, the edit sound at the cut, a line said on camera, a voiceover line and on-screen text. A timeline bar shows how the frames are grouped into Flow clips.
+5. **On-screen text** in three levels: 1) Flow draws short English text; 2) ChatGPT makes an image card with the text (best for end cards, offers and all Bangla text), Flow animates only what's around the letters, and CapCut adds the entrance; 3) the text is added in CapCut. Each text line has an animation (pop, slam, slide, typewriter, word by word, shine, number roll, stamp, neon, hold) with the matching instructions for its level.
+6. **Prompts:** the ChatGPT storyboard prompt (6 frames per storyboard, "Next" for each further one), one Flow prompt per storyboard, the text-card prompts, and a timed voiceover script.
+7. **Cut sheet:** a shot-by-shot edit plan for CapCut: which clip each piece comes from, which seconds to keep, the transition and sound effect at each cut, and the text and voiceover times.
+
+**Why clips are longer than shots.** Flow can't make clips shorter than 4 seconds. The builder plans the clips for you: with Cinematic pace each frame is its own clip; with Punchy pace 2–3 short frames share one clip with timed hard cuts inside it; with Hyper pace each clip is one continuous action that CapCut chops into micro-shots. Every clip gets 25–50% spare length so you can trim the best moment.
+
+Flow makes the sound effects, the words said on camera, and level 1 text. Music and voiceover are added in CapCut.
+
 ### Publish with GitHub Pages
 
 After this is merged into `main`:

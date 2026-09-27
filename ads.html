@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Commercial Ad Prompt Builder</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<script>try{localStorage.setItem("ufw-mode","ads")}catch(e){}</script>
+<style>
+:root{
+  --bg:#f5f3ef; --surface:#ffffff; --field:#f7f6f3; --text:#1c1b19; --muted:#6a665f; --faint:#8f8a82;
+  --border:#e2ded6; --border-strong:#cfc9bd; --accent:#b0501f; --accent-2:#8a3c14; --accent-soft:#f7e7dd;
+  --ok:#2d7a4c; --ok-soft:#e3f1e8; --warn:#a15c00; --warn-soft:#fbefd9; --shadow:0 12px 32px rgba(40,30,20,.14),0 2px 6px rgba(40,30,20,.08);
+  --c1:#d9c7b5; --c2:#c3cfd9; --card:#e9c46a;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; --radius:12px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#141311; --surface:#1d1c1a; --field:#252321; --text:#ede9e2; --muted:#a39e95; --faint:#7e7970;
+    --border:#34312d; --border-strong:#46423c; --accent:#e8895a; --accent-2:#f3a57e; --accent-soft:#3b2a20;
+    --ok:#6cc08e; --ok-soft:#1f3327; --warn:#e0a24a; --warn-soft:#3a2d17; --shadow:0 12px 32px rgba(0,0,0,.5),0 2px 6px rgba(0,0,0,.35);
+    --c1:#4a3d31; --c2:#34414c; --card:#7a6424;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#141311; --surface:#1d1c1a; --field:#252321; --text:#ede9e2; --muted:#a39e95; --faint:#7e7970;
+  --border:#34312d; --border-strong:#46423c; --accent:#e8895a; --accent-2:#f3a57e; --accent-soft:#3b2a20;
+  --ok:#6cc08e; --ok-soft:#1f3327; --warn:#e0a24a; --warn-soft:#3a2d17; --shadow:0 12px 32px rgba(0,0,0,.5),0 2px 6px rgba(0,0,0,.35);
+  --c1:#4a3d31; --c2:#34414c; --card:#7a6424;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+/* UGC | Ads switch (same in index.html) */
+.modebar{max-width:1440px;margin:0 auto;padding:16px 16px 0}
+.mode{display:inline-flex;gap:2px;background:var(--field);border:1px solid var(--border);border-radius:999px;padding:3px}
+.mode a{padding:6px 18px;border-radius:999px;text-decoration:none;color:var(--muted);font-weight:600;font-size:14px;transition:background .15s,color .15s}
+.mode a:hover{color:var(--text)}
+.mode a:focus-visible{outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+.mode a[aria-current="page"]{background:var(--accent);color:#fff}
+.mode small{font-weight:400;opacity:.8;margin-left:4px}
+header{max-width:1440px;margin:0 auto;padding:18px 16px 4px;display:flex;gap:16px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+header h1{margin:0 0 4px;font-size:26px;letter-spacing:-.01em;text-wrap:balance}
+header p{margin:0;color:var(--muted);max-width:760px}
+.wrap{max-width:1440px;margin:0 auto;padding:16px;display:grid;gap:20px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:1100px){.wrap{grid-template-columns:minmax(0,1.7fr) minmax(0,1fr)} aside{position:sticky;top:16px;align-self:start;max-height:calc(100vh - 32px);overflow:auto;padding-right:2px}}
+section,.out{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:18px;scroll-margin-top:12px}
+h2{font-size:17px;margin:0 0 4px;display:flex;gap:10px;align-items:center;text-wrap:balance}
+h2 .n{background:var(--accent);color:#fff;border-radius:50%;min-width:26px;height:26px;display:inline-grid;place-items:center;font-size:12px;flex:none;padding:0 4px}
+h2 small{font-weight:400;color:var(--faint);font-size:13px}
+h3{font-size:14.5px;margin:18px 0 8px}
+.sub{color:var(--muted);font-size:13.5px;margin:0 0 14px;max-width:80ch}
+.grid{display:grid;gap:14px 16px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.field label,.lbl{display:block;font-size:13px;font-weight:600;margin-bottom:5px}
+label small,.lbl small{font-weight:400;color:var(--faint)}
+input[type=text],input[type=number]{width:100%;font:inherit;color:var(--text);background:var(--field);border:1px solid var(--border);border-radius:10px;padding:9px 12px;transition:border-color .15s}
+input[type=text]:hover,input[type=number]:hover{border-color:var(--border-strong)}
+input[type=text]:focus,input[type=number]:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+input.missing{border-color:var(--warn)}
+.desc{font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.45}
+.desc:empty{display:none}
+.note{font-size:13px;background:var(--accent-soft);border-radius:10px;padding:10px 12px;margin:12px 0 0}
+.note:empty{display:none}
+.tip{font-size:13px;color:var(--muted);border-left:3px solid var(--border-strong);padding:2px 0 2px 12px;margin:12px 0 0}
+.tip b{color:var(--text)}
+.kv{display:inline-block;font:12.5px var(--mono);background:var(--field);border:1px solid var(--border);border-radius:6px;padding:0 6px;color:var(--text)}
+.meta{font-size:12.5px;color:var(--muted);margin:8px 0 0}
+
+/* picker trigger */
+.pk{display:flex;align-items:center;gap:8px;width:100%;text-align:left;font:inherit;color:var(--text);background:var(--field);border:1px solid var(--border);border-radius:10px;padding:9px 12px;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.pk:hover{border-color:var(--border-strong)}
+.pk:focus-visible,.pk[aria-expanded="true"]{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.pk .pk-l{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pk .chev{flex:none;width:16px;height:16px;color:var(--muted);transition:transform .15s}
+.pk[aria-expanded="true"] .chev{transform:rotate(180deg)}
+.combo{display:flex}
+.combo input{border-top-right-radius:0;border-bottom-right-radius:0}
+.combo .pk{width:auto;flex:none;border-left:0;border-top-left-radius:0;border-bottom-left-radius:0;padding:9px 11px}
+
+/* popover */
+#pop{position:fixed;z-index:100;display:none;flex-direction:column;background:var(--surface);border:1px solid var(--border-strong);border-radius:12px;box-shadow:var(--shadow);overflow:hidden}
+#pop.open{display:flex;animation:pin .12s ease-out}
+@keyframes pin{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+#popq{margin:8px 8px 0;width:calc(100% - 16px)!important}
+#popq[hidden]{display:none}
+#popl{list-style:none;margin:0;padding:6px;overflow:auto;overscroll-behavior:contain}
+#popl li.opt{padding:8px 10px;border-radius:8px;cursor:pointer;display:grid;grid-template-columns:1fr auto;gap:0 8px}
+#popl li.opt.active{background:var(--accent-soft)}
+#popl .o-l{font-weight:600;font-size:14px}
+#popl .o-d{grid-column:1/-1;font-size:12.5px;color:var(--muted);line-height:1.4;margin-top:1px}
+#popl .o-b{font-size:11px;font-weight:600;color:var(--accent);white-space:nowrap;align-self:center}
+#popl li.opt.sel .o-l::after{content:"  ✓";color:var(--accent)}
+#popl li.grp{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);padding:10px 10px 4px}
+#popl li.empty{padding:12px;color:var(--muted);font-size:13px}
+
+/* choice cards */
+.choices{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.choice{display:block;text-align:left;font:inherit;color:var(--text);background:var(--field);border:1px solid var(--border);border-radius:12px;padding:12px 14px;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.choice:hover{border-color:var(--border-strong)}
+.choice:focus-visible{outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+.choice b{display:block;font-size:14.5px;margin-bottom:2px}
+.choice span{display:block;font-size:12.5px;color:var(--muted);line-height:1.4}
+.choice[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.choice[aria-pressed="true"] b::after{content:"  ✓";color:var(--accent)}
+.choices.small{grid-template-columns:repeat(auto-fit,minmax(92px,1fr))}
+.choices.small .choice{padding:9px 12px;text-align:center}
+.choices.small .choice b{margin:0}
+.row{display:grid;gap:16px 18px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+
+/* quick-start combos */
+.combos{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.chip{font:inherit;font-size:13px;color:var(--text);background:var(--field);border:1px solid var(--border);border-radius:999px;padding:6px 12px;cursor:pointer;transition:border-color .15s;text-align:left}
+.chip:hover{border-color:var(--accent)}
+.chip:focus-visible{outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+.chip i{font-style:normal;color:var(--faint);font-size:12px}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.chip[aria-pressed="true"] i{color:#fff;opacity:.85}
+
+/* plan strip */
+.planline{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--muted);margin-top:14px;padding:10px 12px;border-radius:10px;background:var(--field);border:1px solid var(--border)}
+.planline b{color:var(--text);font-variant-numeric:tabular-nums}
+
+/* timeline */
+.tl{display:flex;height:46px;border-radius:10px;overflow:hidden;border:1px solid var(--border-strong);margin:4px 0 6px;background:var(--field)}
+.tl a{display:grid;place-items:center;min-width:0;font-size:11.5px;font-weight:700;color:var(--text);text-decoration:none;border-right:1px solid var(--surface);background:var(--c1);position:relative;overflow:hidden;font-variant-numeric:tabular-nums}
+.tl a.alt{background:var(--c2)}
+.tl a.card{background:var(--card)}
+.tl a:hover{filter:brightness(1.08)}
+.tl a:last-child{border-right:0}
+.tl a .tx{position:absolute;left:0;right:0;bottom:0;height:4px;background:var(--accent)}
+.tlaxis{display:flex;justify-content:space-between;font:11.5px var(--mono);color:var(--faint);margin-bottom:6px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--muted);margin-bottom:10px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:5px}
+.sum{font-size:13px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.sum b{font-variant-numeric:tabular-nums}
+.sum .bad{color:var(--warn);font-weight:600}
+
+/* frame cards */
+.frame{border:1px solid var(--border);border-radius:12px;padding:12px 14px 14px;margin-top:12px;background:var(--surface);scroll-margin-top:12px}
+.frame.card-f{border-color:var(--card)}
+.fhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.fnum{font-weight:800;color:var(--accent);font-size:15px;font-variant-numeric:tabular-nums}
+.ftime{font:12px var(--mono);color:var(--muted)}
+.fclip{font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--field);border:1px solid var(--border);color:var(--muted)}
+.fdur{display:flex;align-items:center;gap:6px;margin-left:auto;font-size:12.5px;color:var(--muted)}
+.fdur input{width:76px;padding:5px 8px;font-size:13.5px;text-align:right}
+.fgrid{display:grid;gap:8px 10px;grid-template-columns:repeat(3,minmax(0,1fr));margin-top:8px}
+@media (max-width:760px){.fgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:340px){.fgrid{grid-template-columns:minmax(0,1fr)}}
+.tag{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--faint);margin-bottom:3px}
+.fgrid .pk,.fgrid input[type=text]{padding:7px 10px;font-size:13.5px}
+.fgrid .combo .pk{padding:7px 9px}
+.fspan{grid-column:1/-1}
+.fsplit{display:grid;gap:8px 10px;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+@media (max-width:620px){.fsplit{grid-template-columns:minmax(0,1fr)}}
+.fwarn{font-size:12px;color:var(--warn);margin-top:3px}
+.fwarn:empty{display:none}
+.tbox{margin-top:10px;padding:10px;border-radius:10px;background:var(--field);border:1px solid var(--border)}
+.tbox .fgrid{margin-top:8px}
+.tbox .fgrid .pk{background:var(--surface)}
+.tbox input[type=text]{background:var(--surface)}
+.tnote{font-size:12px;color:var(--muted);margin-top:6px}
+.tnote b{color:var(--text)}
+.lvl{display:inline-block;font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;background:var(--accent);color:#fff;margin-right:4px}
+.vo-only[hidden]{display:none}
+
+/* outputs */
+.send{margin-top:14px;border:1px solid var(--border-strong);border-radius:12px;overflow:hidden}
+.send .sh{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 8px 8px 14px;background:var(--field);border-bottom:1px solid var(--border)}
+.send .sh span{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--accent)}
+.send pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12.5px/1.55 var(--mono);margin:0;padding:12px 14px;max-height:360px;overflow:auto;background:var(--surface)}
+.send .how{font-size:12.5px;color:var(--muted);padding:8px 14px 0;margin:0}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+button.b{font:inherit;font-size:14px;border-radius:10px;padding:7px 14px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text);transition:filter .15s,border-color .15s;white-space:nowrap}
+button.b:hover{border-color:var(--border-strong)}
+button.b:focus-visible{outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+button.primary:hover{filter:brightness(1.07)}
+button.copied{background:var(--ok);border-color:var(--ok);color:#fff}
+button.sm{font-size:13px;padding:5px 11px}
+.cardout{border-top:1px solid var(--border);margin-top:16px;padding-top:4px}
+.cardout:first-child{border-top:0;margin-top:0}
+.cardout h3{margin-top:12px}
+.empty{font-size:13px;color:var(--muted);margin:0}
+
+/* cut sheet */
+.cs-wrap{overflow:auto;margin-top:10px;border:1px solid var(--border);border-radius:10px}
+table.cs{border-collapse:collapse;width:100%;font-size:12.5px;min-width:720px}
+table.cs th,table.cs td{text-align:left;vertical-align:top;padding:7px 10px;border-bottom:1px solid var(--border)}
+table.cs th{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--faint);background:var(--field);position:sticky;top:0}
+table.cs td.t{font-family:var(--mono);white-space:nowrap}
+table.cs td:nth-child(3){min-width:150px}
+table.cs td small{display:block;color:var(--muted)}
+table.cs tr:last-child td{border-bottom:0}
+
+/* checklists */
+.checklist{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.checklist li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;align-items:start}
+.checklist input{accent-color:var(--ok);width:17px;height:17px;margin:2px 0 0}
+.checklist b{font-weight:600}
+.checklist .d{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
+details summary{cursor:pointer;font-weight:600}
+.gloss{display:grid;gap:6px 18px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));font-size:13px;margin-top:10px}
+.gloss h3{grid-column:1/-1;font-size:14px;margin:14px 0 2px}
+
+/* aside */
+.nav{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.nav a{display:block;color:var(--text);text-decoration:none;font-size:13.5px;padding:6px 8px;border-radius:8px}
+.nav a:hover{background:var(--field);color:var(--accent)}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:4px 0 0}
+.stat{background:var(--field);border:1px solid var(--border);border-radius:10px;padding:8px 10px}
+.stat b{display:block;font-size:18px;font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--muted)}
+.warns{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:6px}
+.warns li{font-size:12.5px;background:var(--warn-soft);border-radius:8px;padding:7px 10px}
+.warns li.ok{background:var(--ok-soft)}
+.out h2{margin:0 0 8px}
+
+/* reference sheet builder (shared sheets.js) */
+.rsbox{margin-top:14px;border:1px dashed var(--border-strong);border-radius:12px;padding:12px 14px;background:var(--field)}
+.rsbox p{margin:0 0 10px;font-size:13px;color:var(--muted)}
+.rsbox p b{color:var(--text)}
+dialog#rs{width:min(1100px,calc(100vw - 32px));max-height:calc(100dvh - 32px);padding:0;border:1px solid var(--border-strong);border-radius:14px;background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
+dialog#rs::backdrop{background:rgba(20,15,10,.55)}
+.rs-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:16px 18px 10px;border-bottom:1px solid var(--border)}
+.rs-head h2{margin:0}
+.rs-head p{margin:2px 0 0;font-size:13px;color:var(--muted);max-width:70ch}
+.rs-body{display:grid;gap:18px;padding:16px 18px 18px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:820px){.rs-body{grid-template-columns:minmax(0,1fr) minmax(0,1.05fr)}}
+.rs-cv{display:block;width:100%;max-width:calc(68dvh * 9 / 16);height:auto;aspect-ratio:9/16;margin:0 auto;border-radius:8px;border:1px solid var(--border);touch-action:none;cursor:pointer;background:var(--field)}
+.rs-cv.drop{outline:3px solid var(--accent);outline-offset:2px}
+.rs-slots{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.rs-slots button{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:10px;align-items:center;width:100%;text-align:left;font:inherit;color:var(--text);background:var(--field);border:1px solid var(--border);border-radius:10px;padding:6px 10px 6px 6px;cursor:pointer}
+.rs-slots button:hover{border-color:var(--border-strong)}
+.rs-slots button:focus-visible{outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+.rs-slots button[aria-current="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.rs-slots .th{width:44px;height:44px;border-radius:7px;background:var(--surface) center/cover no-repeat;border:1px solid var(--border);display:grid;place-items:center;font-size:13px;font-weight:700;color:var(--faint)}
+.rs-slots .nm{font-size:13.5px;font-weight:600;display:block}
+.rs-slots .hn{font-size:12px;color:var(--muted);display:block;line-height:1.35}
+.rs-slots .st{font-size:11.5px;color:var(--faint);white-space:nowrap}
+.rs-slots .st.ok{color:var(--ok)}
+.rs-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0 0;padding:10px;border:1px solid var(--border);border-radius:10px}
+.rs-tools label{font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.rs-tools input[type=range]{width:120px;accent-color:var(--accent)}
+.rs-tools .who{font-size:12.5px;font-weight:600;flex-basis:100%}
+.rs-tools[hidden]{display:none}
+.rs-bg{display:flex;gap:6px;align-items:center;font-size:12.5px;color:var(--muted);margin-top:12px}
+.rs-bg button{width:26px;height:26px;border-radius:50%;border:1px solid var(--border-strong);cursor:pointer;padding:0}
+.rs-bg button[aria-pressed="true"]{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--accent)}
+.rs-msg{font-size:12.5px;color:var(--warn);margin:8px 0 0;min-height:1em}
+.rs-msg.ok{color:var(--ok)}
+</style>
+</head>
+<body>
+<div class="modebar"><nav class="mode" aria-label="Choose a builder"><a href="index.html#ugc" data-mode="ugc">UGC<small>creator ads</small></a><a href="ads.html" aria-current="page" data-mode="ads">Ads<small>commercials</small></a></nav></div>
+<header>
+  <div>
+    <h1>Commercial Ad Prompt Builder</h1>
+    <p>Fast-cut commercials with flashy edits, sound effects and on-screen text. Fill in the product, pick a length and pace, check the shot list, then copy the prompts: ChatGPT draws the storyboards, Google Flow shoots the clips, and the cut sheet tells you exactly how to edit them in CapCut.</p>
+  </div>
+  <div class="btns"><button class="b" id="loadExample" type="button">Load an example</button><button class="b" id="resetAll" type="button">Start a new ad</button><button class="b" id="themeBtn" type="button">Light / dark</button></div>
+</header>
+
+<div class="wrap">
+<main>
+
+<section id="s-market">
+  <h2><span class="n">1</span>Market and language</h2>
+  <p class="sub">Sets the ready-made audiences and models, and the language of anything a person says on camera or in the voiceover.</p>
+  <div class="row">
+    <div><div class="lbl">Who is the ad for?</div><div class="choices" data-choice="market"></div></div>
+    <div><div class="lbl">Video shape</div><div class="choices" data-choice="aspect"></div></div>
+  </div>
+  <div id="langWrap" style="margin-top:14px"><div class="lbl">Language for speech</div><div class="choices" data-choice="lang"></div></div>
+  <div class="row" style="margin-top:14px">
+    <div><div class="lbl">Voiceover</div><div class="choices" data-choice="vo"></div></div>
+  </div>
+</section>
+
+<section id="s-product">
+  <h2><span class="n">2</span>Product and brand</h2>
+  <p class="sub">Type freely. Fields with ▾ also have ready-made options. Only the product name, category and selling point are needed; the rest makes the ad sharper.</p>
+  <div class="grid">
+    <div class="field"><label for="f-name">Product name</label><input type="text" id="f-name" data-k="name" placeholder="e.g. Proton M-Earphone Rhythmic"></div>
+    <div class="field"><label for="f-flow">Short name for Flow <small>(optional)</small></label><input type="text" id="f-flow" data-k="flow" placeholder="e.g. Proton earphone"></div>
+    <div class="field"><label for="f-cat">Category</label><div class="combo"><input type="text" id="f-cat" data-k="cat" placeholder="e.g. Electronics"><button class="pk" type="button" data-pk="cat" aria-label="Category options"></button></div><div class="desc" data-pkd="cat"></div></div>
+    <div class="field"><label for="f-usp">Core selling point</label><input type="text" id="f-usp" data-k="usp" placeholder="e.g. Rich bass, in-line controls, secure fit"></div>
+    <div class="field"><label for="f-aud">Target audience</label><div class="combo"><input type="text" id="f-aud" data-k="aud" placeholder="Pick or type your own"><button class="pk" type="button" data-pk="aud" aria-label="Audience options"></button></div><div class="desc" data-pkd="aud"></div></div>
+    <div class="field"><label for="f-model">Primary model</label><div class="combo"><input type="text" id="f-model" data-k="model" placeholder="Pick or type your own"><button class="pk" type="button" data-pk="model" aria-label="Model options"></button></div><div class="desc" data-pkd="model"></div></div>
+    <div class="field"><label for="f-setting">Setting / location <small>(optional)</small></label><input type="text" id="f-setting" data-k="setting" placeholder="e.g. Rooftop in Dhanmondi at night"></div>
+    <div class="field"><label for="f-theme">Commercial theme</label><div class="combo"><input type="text" id="f-theme" data-k="theme" placeholder="Pick or type your own"><button class="pk" type="button" data-pk="theme" aria-label="Theme options"></button></div><div class="desc" data-pkd="theme"></div></div>
+    <div class="field"><label for="f-brand">Brand name <small>(end card)</small></label><input type="text" id="f-brand" data-k="brand" placeholder="e.g. Proton"></div>
+    <div class="field"><label for="f-cta">Call to action <small>(end card)</small></label><input type="text" id="f-cta" data-k="cta" placeholder="e.g. Order now"></div>
+    <div class="field"><label for="f-offer">Offer <small>(optional)</small></label><input type="text" id="f-offer" data-k="offer" placeholder="e.g. 50% OFF"></div>
+    <div class="field"><label for="f-accent">Brand color <small>(optional)</small></label><input type="text" id="f-accent" data-k="accent" placeholder="e.g. electric blue"></div>
+    <div class="field" style="grid-column:1/-1"><label for="f-extra">Extra direction <small>(optional)</small></label><input type="text" id="f-extra" data-k="extra" placeholder="e.g. Show the friends only from frame 5"></div>
+  </div>
+  <div class="rsbox"><p><b>Optional: reference sheets.</b> A product sheet keeps the product the same across many fast cuts. Put your own photos in the template and download a PNG, then attach it in ChatGPT with the storyboard prompt and tag it in Flow. Skip this if a few good product photos are enough.</p><div class="btns"><button class="b" type="button" data-rs="product">Product sheet · 8 panels</button><button class="b" type="button" data-rs="char">Character sheet · 6 views</button><button class="b" type="button" data-rs="expr">Expression sheet · 6 faces</button></div></div>
+</section>
+
+<section id="s-shape">
+  <h2><span class="n">3</span>Length, pace and style</h2>
+  <p class="sub">Length and pace decide how many frames the ad needs and how long each one is. Flow can't make clips shorter than 4 seconds, so the tool plans the clips for you: short shots are shot inside longer clips, with spare seconds at both ends for trimming.</p>
+  <div class="lbl">Ad length</div>
+  <div class="choices small" data-choice="len"></div>
+  <div class="lbl" style="margin-top:14px">Pace</div>
+  <div class="choices" data-choice="pace"></div>
+  <div class="lbl" style="margin-top:14px">Frames</div>
+  <div class="choices small" data-choice="nf"></div>
+  <div class="planline" id="planLine"></div>
+
+  <h3>Quick start: good combinations</h3>
+  <p class="sub" id="comboHint" style="margin:0"></p>
+  <div class="combos" id="combos"></div>
+
+  <div class="grid" style="margin-top:16px">
+    <div><div class="lbl">Ad format</div><button class="pk" type="button" data-pk="format"></button><div class="desc" data-pkd="format"></div><div class="note" id="fmtNote"></div></div>
+    <div><div class="lbl">Visual style</div><button class="pk" type="button" data-pk="style"></button><div class="desc" data-pkd="style"></div></div>
+  </div>
+  <details style="margin-top:14px"><summary>Mood dials <small style="font-weight:400;color:var(--faint)">optional</small></summary>
+    <div class="grid" id="dials" style="margin-top:10px"></div>
+  </details>
+</section>
+
+<section id="s-frames">
+  <h2><span class="n">4</span>Shot list</h2>
+  <p class="sub">The format fills in every frame. Change anything. Each frame is one shot in the finished ad. The colored bar shows how the frames are grouped into Flow clips; a gold block is a text card that is made separately.</p>
+  <div class="tl" id="tl"></div>
+  <div class="tlaxis" id="tlaxis"></div>
+  <div class="legend"><span><i style="background:var(--c1)"></i><i style="background:var(--c2)"></i>Flow clips</span><span><i style="background:var(--card)"></i>Text card (level 2)</span><span><i style="background:var(--accent);height:4px;vertical-align:2px"></i>Has on-screen text</span></div>
+  <div class="sum" id="durSum"></div>
+  <div class="btns" style="margin-top:10px"><button class="b sm" type="button" id="fitDur">Fit lengths to the ad length</button><button class="b sm" type="button" id="resetFrames">Reset frames to format defaults</button></div>
+  <div id="frames"></div>
+</section>
+
+<section id="s-text">
+  <h2><span class="n">5</span>On-screen text</h2>
+  <p class="sub">Add text to any frame in its <b>On-screen text</b> box. Each text line picks one of three levels. <b>Auto</b> picks for you: short English text goes to Flow, and longer or Bangla text becomes an image card.</p>
+  <div class="grid">
+    <div><div class="lbl">Text look</div><button class="pk" type="button" data-pk="tstyle"></button><div class="desc" data-pkd="tstyle"></div></div>
+    <div><div class="lbl">End card</div><div class="choices" data-choice="endCard"></div></div>
+  </div>
+  <div class="grid" style="margin-top:14px;font-size:13px">
+    <div class="tip" style="margin:0"><b>Level 1 · Flow draws it.</b> Up to 4 English words. The text and its animation are written into the storyboard and the Flow prompt. Cheapest, but check the spelling in every clip.</div>
+    <div class="tip" style="margin:0"><b>Level 2 · Image, then animate.</b> ChatGPT makes the frame with the text (it spells well, Bangla too). Flow animates only the scene around the letters; CapCut does the entrance. Best for end cards and offers.</div>
+    <div class="tip" style="margin:0"><b>Level 3 · Add in CapCut.</b> The clip stays clean. The cut sheet gives the text, time, position and the exact animation to set.</div>
+  </div>
+</section>
+
+<section id="s-prompts">
+  <h2><span class="n">6</span>Copy the prompts</h2>
+  <h3 style="margin-top:6px">A · ChatGPT storyboard</h3>
+  <p class="sub">Open ChatGPT (image generation on), attach your product photos or product sheet (and character sheet, if you have one), paste this and send. Check each storyboard before you continue.</p>
+  <div class="send"><div class="sh"><span>Paste in ChatGPT</span><button class="b primary" type="button" data-copy="outChat">Copy</button></div><pre id="outChat"></pre></div>
+  <div class="btns" style="margin-top:10px"><button class="b" type="button" data-copy-text="Next">Copy "Next"</button><span class="meta" id="nextMeta" style="margin:0;align-self:center"></span></div>
+
+  <h3>B · Google Flow, one prompt per storyboard</h3>
+  <p class="sub">Each prompt lists its clips with exact lengths and cut times, so Flow makes one separate clip per line.</p>
+  <div id="outFlow"></div>
+
+  <h3>C · Text cards (level 2)</h3>
+  <div id="outCards"></div>
+
+  <div class="vo-only" id="voWrap">
+    <h3>D · Voiceover script</h3>
+    <p class="sub">Recorded or made with a text-to-speech voice after the video, then placed in CapCut at these times. The word count shows whether each line fits.</p>
+    <div class="send"><div class="sh"><span>Voiceover</span><button class="b primary" type="button" data-copy="outVO">Copy</button></div><pre id="outVO"></pre></div>
+  </div>
+</section>
+
+<section id="s-flow">
+  <h2><span class="n">7</span>Make the clips in Google Flow</h2>
+  <p class="sub">Open <a href="https://labs.google/fx/tools/flow" target="_blank" rel="noopener">Google Flow</a> and start a new project. Tick each step as you go.</p>
+  <ul class="checklist">
+    <li><input type="checkbox" id="fl1" data-chk="fl1"><label for="fl1"><b>Select Agent mode, and in Settings set <span class="kv">Confirm before generating</span> to <span class="kv">Never</span>.</b><span class="d">Otherwise the agent stops and asks before every clip.</span></label></li>
+    <li><input type="checkbox" id="fl2" data-chk="fl2"><label for="fl2"><b>Set the aspect ratio to <span class="kv" id="flAspect">9:16</span> and the output count to <span class="kv">1</span>.</b><span class="d">One version per clip saves credits. Pick the video model Flow recommends.</span></label></li>
+    <li><input type="checkbox" id="fl3" data-chk="fl3"><label for="fl3"><b>Paste Flow prompt 1, upload Storyboard 1 and your product photos or sheet (and the character sheet), then type <span class="kv">@</span> and tag every image.</b><span class="d">Tagging tells the agent which image is the storyboard and which is the product, so the product stays the same in every clip.</span></label></li>
+    <li><input type="checkbox" id="fl4" data-chk="fl4"><label for="fl4"><b>Send, and check every clip.</b><span class="d">Right length? Hard cuts where the prompt says CUT? Product and label right? No subtitles or extra text? If not, use the fix message below.</span></label></li>
+    <li><input type="checkbox" id="fl5" data-chk="fl5"><label for="fl5"><b>Repeat for each storyboard in the same project.</b><span class="d">Paste the next Flow prompt, upload the next storyboard, tag the images again, send.</span></label></li>
+    <li><input type="checkbox" id="fl6" data-chk="fl6"><label for="fl6"><b>Make the text cards, if you have any.</b><span class="d">Upload the card image from ChatGPT, paste its animate prompt and send. Make one card at a time.</span></label></li>
+    <li><input type="checkbox" id="fl7" data-chk="fl7"><label for="fl7"><b>Download and name the clips by clip number.</b><span class="d">For example <span class="kv">clip-01.mp4</span>, <span class="kv">clip-02.mp4</span>… The cut sheet uses the same numbers.</span></label></li>
+  </ul>
+  <h3>A clip came out wrong? Remake only that clip</h3>
+  <div class="grid">
+    <div><div class="lbl">Which clip?</div><button class="pk" type="button" data-pk="fixClip"></button></div>
+    <div><div class="lbl">What's wrong?</div><button class="pk" type="button" data-pk="fixIssue"></button><div class="desc" data-pkd="fixIssue"></div></div>
+  </div>
+  <div class="field" style="margin-top:10px"><label class="lbl" for="f-fixExtra">Anything else to say? <small>(optional)</small></label><input type="text" id="f-fixExtra" data-k="fixExtra" placeholder="e.g. the logo should face the camera"></div>
+  <div class="send"><div class="sh"><span>Send this in Flow</span><button class="b primary" type="button" data-copy="outFix">Copy</button></div><pre id="outFix"></pre></div>
+</section>
+
+<section id="s-edit">
+  <h2><span class="n">8</span>Edit in CapCut with the cut sheet</h2>
+  <p class="sub">The cut sheet is your edit, shot by shot: where each piece of the ad comes from, which part of the clip to keep, the transition and sound effect at each cut, and any text to add. Times are in the finished ad (minutes:seconds).</p>
+  <div class="btns"><button class="b primary" type="button" data-copy="csText">Copy cut sheet as text</button></div>
+  <div class="cs-wrap"><table class="cs" id="cs"></table></div>
+  <pre id="csText" hidden></pre>
+  <h3>Steps</h3>
+  <ul class="checklist">
+    <li><input type="checkbox" id="ed1" data-chk="ed1"><label for="ed1"><b>Import all clips and put them on the timeline in cut-sheet order.</b><span class="d">A clip that holds several frames is used once; a Hyper clip is cut into several short takes.</span></label></li>
+    <li><input type="checkbox" id="ed2" data-chk="ed2"><label for="ed2"><b>Trim each piece to the "Keep" seconds on the sheet.</b><span class="d">Split the clip at the start and end time, delete the rest. The spare seconds are there so you can pick the best moment; nudge them freely.</span></label></li>
+    <li><input type="checkbox" id="ed3" data-chk="ed3"><label for="ed3"><b>Add the transitions.</b><span class="d">In-camera ones (whip pan, hand wipe, spin) are already in the clips: just cut at the blur. Edit ones (flash, zoom punch, glitch, light leak) come from CapCut's Transitions or Effects.</span></label></li>
+    <li><input type="checkbox" id="ed4" data-chk="ed4"><label for="ed4"><b>Add the edit sound effects at each cut.</b><span class="d">Audio → Sound effects, search the name (whoosh, bass hit, riser…). Put a riser just before a big reveal and a hit right on it.</span></label></li>
+    <li><input type="checkbox" id="ed5" data-chk="ed5"><label for="ed5"><b>Add level 3 text and the text-card entrances.</b><span class="d">The sheet says which animation to pick and for how long.</span></label></li>
+    <li><input type="checkbox" id="ed6" data-chk="ed6"><label for="ed6"><b>Add the voiceover and background music.</b><span class="d">Music under everything, lowered while someone speaks. Cut on the beat where you can: hyper-paced ads feel best when cuts land on drum hits.</span></label></li>
+    <li><input type="checkbox" id="ed7" data-chk="ed7"><label for="ed7"><b>Watch it full screen with sound, then export.</b><span class="d" id="edExport">1080 × 1920 (9:16), 30 fps.</span></label></li>
+  </ul>
+</section>
+
+<section>
+  <details>
+    <summary>Glossary: shots, angles, camera moves, transitions and text animations</summary>
+    <div class="gloss" id="gloss"></div>
+  </details>
+</section>
+
+</main>
+
+<aside>
+  <div class="out">
+    <h2>Your ad at a glance</h2>
+    <div class="stats" id="stats"></div>
+    <ul class="warns" id="warns"></ul>
+  </div>
+  <div class="out">
+    <h2>Jump to</h2>
+    <ul class="nav">
+      <li><a href="#s-market">1 · Market and language</a></li>
+      <li><a href="#s-product">2 · Product and brand</a></li>
+      <li><a href="#s-shape">3 · Length, pace and style</a></li>
+      <li><a href="#s-frames">4 · Shot list</a></li>
+      <li><a href="#s-text">5 · On-screen text</a></li>
+      <li><a href="#s-prompts">6 · Copy the prompts</a></li>
+      <li><a href="#s-flow">7 · Google Flow</a></li>
+      <li><a href="#s-edit">8 · CapCut cut sheet</a></li>
+    </ul>
+  </div>
+</aside>
+</div>
+
+<dialog id="rs" aria-labelledby="rsTitle">
+  <div class="rs-head">
+    <div><h2 id="rsTitle"></h2><p id="rsSub"></p></div>
+    <button class="b" type="button" id="rsClose">Close</button>
+  </div>
+  <div class="rs-body">
+    <div>
+      <canvas id="rsCv" class="rs-cv" width="1440" height="2560" aria-label="Sheet preview. Click an empty panel to add a photo, drag a photo to move it."></canvas>
+      <div class="rs-bg"><span>Background</span><span id="rsBg"></span></div>
+    </div>
+    <div>
+      <div class="btns"><button class="b" type="button" id="rsAdd">Add photos</button><button class="b primary" type="button" id="rsDl">Download PNG</button></div>
+      <p class="rs-msg" id="rsMsg" role="status"></p>
+      <p class="sub" style="margin:4px 0 10px">Click a panel to add its photo, or pick several photos at once to fill the empty panels in order. You can also drop photos on a panel. Drag a photo to move it. Photos stay on this page only and are cleared when you reload.</p>
+      <ul class="rs-slots" id="rsSlots"></ul>
+      <div class="rs-tools" id="rsTools" hidden>
+        <span class="who" id="rsWho"></span>
+        <button class="b" type="button" id="rsRep">Replace</button>
+        <button class="b" type="button" id="rsFit"></button>
+        <label>Zoom <input type="range" id="rsZoom" min="1" max="4" step="0.01" value="1"></label>
+        <button class="b" type="button" id="rsReset">Center</button>
+        <button class="b" type="button" id="rsDel">Remove</button>
+      </div>
+      <h3>Then</h3>
+      <p class="sub" id="rsNext" style="margin:0"></p>
+      <div class="send" id="rsSendWrap"><div class="sh"><span id="rsSendLbl"></span><button class="b primary" type="button" data-copy="rsSend">Copy</button></div><pre id="rsSend"></pre></div>
+    </div>
+  </div>
+  <input type="file" id="rsFile" accept="image/*" multiple hidden>
+</dialog>
+
+<div id="pop" role="dialog" aria-modal="false">
+  <input type="text" id="popq" placeholder="Search…" autocomplete="off" aria-label="Search options">
+  <ul id="popl" role="listbox"></ul>
+</div>
+
+<script src="ads.js"></script>
+<script src="sheets.js"></script>
+</body>
+</html>
