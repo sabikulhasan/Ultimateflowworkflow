@@ -721,7 +721,7 @@ First create the complete storyboard plan.
 
 For every shot include:
 - Shot number
-- Approximate duration
+- Duration in exact whole seconds (for example 3s, not "about 3s")
 - Framing type (selfie handheld close-up, tripod medium shot, POV,
   over-shoulder, back camera on product, product close-up in hand,
   etc.)
@@ -747,7 +747,18 @@ UGC SHOT STYLE RULES:
 For 45–60 seconds: normally use approximately 6–10 shots.
 For 15–30 seconds: normally use approximately 3–6 shots.
 
+SHOT DURATION RULES:
+- Every shot has an exact length in whole seconds.
+- Keep each shot between 2 and 8 seconds. A longer moment becomes
+  two shots.
+- Fit the length to the spoken words: enough time to say the line
+  naturally, with no long empty pause.
+- All shot lengths added together must equal the selected duration.
+- At the end of the plan, show the total, for example:
+  "Total: 3s + 5s + 4s + 6s + 5s + 7s = 30s".
+
 Each shot must represent one clear visual moment.
+Each shot becomes ONE separate video clip.
 The storyboard must follow the script exactly.
 
 STORYBOARD GROUPS
@@ -774,11 +785,11 @@ STORYBOARD IMAGE LAYOUT
 - Every panel is a clean 9:16 vertical picture of that shot.
 - NOTHING is written on the pictures themselves.
 - Under each panel, a thin dark strip holds ONE line only:
-  [shot number] · [SAYS / VO / BG]: "[exact words]"
-  Example: 3 · SAYS: "okay so this changed my mornings"
-  A shot with no audio has only its shot number.
-- No other text anywhere in the image: no titles, durations,
-  camera notes, arrows, labels or captions.
+  [shot number] · [seconds]s · [SAYS / VO / BG]: "[exact words]"
+  Example: 3 · 4s · SAYS: "okay so this changed my mornings"
+  A shot with no audio has only its shot number and seconds.
+- No other text anywhere in the image: no titles, camera notes,
+  arrows, labels or captions.
 
 Use the locked character, product and location in every panel.
 Show the actual UGC ad progression, filmed from smartphone
@@ -831,6 +842,7 @@ STORY:
 - Correct sequence across all storyboards
 - Hook in first 1–3 seconds
 - Correct spoken lines and SAYS / VO / BG tags in the strips
+- Correct seconds in every strip, adding up to the selected duration
 - Correct product usage
 - Correct CTA ending
 
@@ -850,14 +862,22 @@ STAGE 11 — FLOW AGENT PROMPTS
 
 Flow Agent plans each clip and writes its own video prompts from
 the storyboard and the reference images. Keep the prompt SHORT.
-Do NOT add scene descriptions, dialogue, style lists or rules.
+Do NOT add scene descriptions, style lists or rules.
 
 Give ONE prompt per storyboard, each in its own code block,
 titled "FLOW PROMPT — PART [X] OF [N]" (Storyboard X).
 
+The only thing you fill in is [SHOT LIST]: one line per shot in
+that storyboard, copied exactly from the approved storyboard plan:
+Shot [number] · [seconds]s · [SAYS / VO / BG]: "[exact words]"
+A shot with no audio: Shot [number] · [seconds]s
+
 Copy this template WORD FOR WORD:
 
 Make a 9:16 vertical smartphone UGC video from @storyboard.
+Make one separate clip for every shot below, in order. Never merge shots into one clip.
+Each clip is exactly the length shown for its shot:
+[SHOT LIST]
 Keep the person, product and place exactly as in @character @product @location.
 Follow the storyboard panel by panel. The strip under each panel is instructions only, never show it.
 SAYS = speaks on camera. VO = their voice, mouth not shown. BG = background voices or sounds only.
@@ -966,12 +986,14 @@ The complete workflow must be:
 
 15. Write UGC Ad Script (hook in first 1–3s + SAYS / VO / BG tags +
     soft CTA, no on-screen text) → user approves → STOP
-16. Create Storyboard Plan in text/table with storyboard groups of
-    up to 6 shots → user approves → STOP
+16. Create Storyboard Plan in text/table with exact seconds per
+    shot (adding up to the duration) and storyboard groups of up
+    to 6 shots → user approves → STOP
 17. Create Storyboard 1 → user approves or replies Next → create
     the next storyboard → repeat until the last one is approved
 18. Perform Final Consistency Check → show report → ask permission
-19. Give one short Flow Agent prompt per storyboard
+19. Give one short Flow Agent prompt per storyboard, with its shot
+    list (one clip per shot, exact seconds)
 
 ═══════════════════════════════════════════
 SIDE-CHAT BRIEF TEMPLATES

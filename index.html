@@ -337,14 +337,14 @@ dialog#rs::backdrop{background:rgba(20,15,10,.55)}
   <h2><span class="n">8</span>Approve the script and storyboard</h2>
   <p class="sub">Back in the main chat, ChatGPT writes the script (what the person says), plans every shot, draws the storyboards one at a time (up to 6 shots each) and checks everything. It stops and asks after each part. Read each one; if something is wrong, type what to change and copy that reply instead.</p>
   <div id="g-script"></div>
-  <p class="tip"><b>Download</b> every storyboard image. Each panel is a clean picture with one line under it: the shot number and the words, for example <span class="kv">3 · SAYS: "okay so…"</span>. No text should be drawn on the pictures themselves.</p>
+  <p class="tip"><b>Download</b> every storyboard image. Each panel is a clean picture with one line under it: the shot number, its length in seconds and the words, for example <span class="kv">3 · 4s · SAYS: "okay so…"</span>. No text should be drawn on the pictures themselves.</p>
   <div class="markdone"><button class="b" type="button" data-done="script">Mark step done</button></div>
 </section>
 
 <section id="s-final" data-step="final">
   <p class="stage">Stage 11 · Flow prompts</p>
   <h2><span class="n">9</span>Copy ChatGPT's Flow prompts</h2>
-  <p class="sub">ChatGPT gives one short <b>Flow prompt per storyboard</b> (FLOW PROMPT — PART 1 OF 2, and so on). They are only a few lines on purpose: Flow Agent reads the storyboard and writes the detailed clip prompts itself. Check that you have these images saved:</p>
+  <p class="sub">ChatGPT gives one short <b>Flow prompt per storyboard</b> (FLOW PROMPT — PART 1 OF 2, and so on). Each one lists the shots with their exact seconds, so Flow makes one clip per shot at the right length instead of one long 10-second video. Flow Agent reads the storyboard and writes the detailed clip prompts itself. Check that you have these images saved:</p>
   <ul class="checklist">
     <li><input type="checkbox" id="a1" data-chk="a1"><label for="a1"><b>Character Reference Sheet</b><span class="d">6 views of the same person on a plain background, with two big face close-ups.</span></label></li>
     <li><input type="checkbox" id="a2" data-chk="a2"><label for="a2"><b>Product Reference Sheet</b><span class="d">Your product from several sides.</span></label></li>
@@ -352,7 +352,7 @@ dialog#rs::backdrop{background:rgba(20,15,10,.55)}
     <li><input type="checkbox" id="a4" data-chk="a4"><label for="a4"><b>Storyboard images</b><span class="d">Up to 6 tall phone-shaped panels each, in order, with a one-line strip under each panel.</span></label></li>
   </ul>
   <p class="tip">Give the files clear names, for example <span class="kv">1-character.png</span> <span class="kv">2-product.png</span> <span class="kv">3-location.png</span> <span class="kv">4-storyboard-1.png</span> <span class="kv">4-storyboard-2.png</span>. Tagging them in Flow is much easier that way.</p>
-  <details><summary>Backup: the Flow prompts built on this page</summary><p class="tip">Use these only if ChatGPT changed the template. They are copied from the master prompt.</p>
+  <details><summary>Backup: the Flow prompts built on this page</summary><p class="tip">Use these only if ChatGPT changed the template. They are copied from the master prompt. Replace <span class="kv">[SHOT LIST]</span> with one line per shot from your storyboard plan, for example <span class="kv">Shot 1 · 3s · SAYS: "okay so…"</span>.</p>
   <div class="send"><div class="sh"><span>Part 1</span><button class="b primary" type="button" data-copy="flowP1">Copy</button></div><pre id="flowP1"></pre></div>
   <div class="send"><div class="sh"><span>Part 2 and later</span><button class="b primary" type="button" data-copy="flowP2">Copy</button></div><pre id="flowP2"></pre></div></details>
   <div class="markdone"><button class="b" type="button" data-done="final">Mark step done</button></div>
@@ -371,8 +371,8 @@ dialog#rs::backdrop{background:rgba(20,15,10,.55)}
     <li><input type="checkbox" id="fl6" data-chk="fl6"><label for="fl6"><b>Paste the Part 1 Flow prompt into the chat box.</b><span class="d">Paste it but don't send yet.</span></label></li>
     <li><input type="checkbox" id="fl7" data-chk="fl7"><label for="fl7"><b>Click <span class="kv">+</span>, then Upload media, and add your 4 images.</b><span class="d">Character sheet, product sheet, location sheet and Storyboard 1.</span></label></li>
     <li><input type="checkbox" id="fl8" data-chk="fl8"><label for="fl8"><b>At the end of the prompt, type <span class="kv">@</span> and tag all 4 images one by one.</b><span class="d">This is the most important step. Tagging tells the agent which picture is the character, the product, the place and the storyboard, so they stay the same in every clip.</span></label></li>
-    <li><input type="checkbox" id="fl9" data-chk="fl9"><label for="fl9"><b>Send it and wait.</b><span class="d">The agent makes several clips. When Flow is busy, it makes them one at a time.</span></label></li>
-    <li><input type="checkbox" id="fl10" data-chk="fl10"><label for="fl10"><b>Watch every clip and check it.</b><span class="d">Same face and hair? Product looks right, logo spelled right? Same room? Right words? No subtitles or text on screen? If not, use the fix-it message below.</span></label></li>
+    <li><input type="checkbox" id="fl9" data-chk="fl9"><label for="fl9"><b>Send it and wait.</b><span class="d">The agent makes one clip per shot, each as long as the seconds in the shot list. When Flow is busy, it makes them one at a time. If it makes only one video, reply: <span class="kv">Make one separate clip for every shot in the list, each with its exact length.</span></span></label></li>
+    <li><input type="checkbox" id="fl10" data-chk="fl10"><label for="fl10"><b>Watch every clip and check it.</b><span class="d">One clip per shot, right length? Same face and hair? Product looks right, logo spelled right? Same room? Right words, said right? No subtitles or text on screen? If not, use the fix-it message below.</span></label></li>
     <li><input type="checkbox" id="fl12" data-chk="fl12"><label for="fl12"><b>More storyboards? Do the next part in the same project.</b><span class="d">Paste the Part 2 prompt, upload Storyboard 2, tag the 3 sheets and Storyboard 2, and send. Repeat for each part.</span></label></li>
     <li><input type="checkbox" id="fl11" data-chk="fl11"><label for="fl11"><b>Download all the clips.</b></label></li>
   </ul>
@@ -1189,7 +1189,7 @@ First create the complete storyboard plan.
 
 For every shot include:
 - Shot number
-- Approximate duration
+- Duration in exact whole seconds (for example 3s, not "about 3s")
 - Framing type (selfie handheld close-up, tripod medium shot, POV,
   over-shoulder, back camera on product, product close-up in hand,
   etc.)
@@ -1215,7 +1215,18 @@ UGC SHOT STYLE RULES:
 For 45–60 seconds: normally use approximately 6–10 shots.
 For 15–30 seconds: normally use approximately 3–6 shots.
 
+SHOT DURATION RULES:
+- Every shot has an exact length in whole seconds.
+- Keep each shot between 2 and 8 seconds. A longer moment becomes
+  two shots.
+- Fit the length to the spoken words: enough time to say the line
+  naturally, with no long empty pause.
+- All shot lengths added together must equal the selected duration.
+- At the end of the plan, show the total, for example:
+  "Total: 3s + 5s + 4s + 6s + 5s + 7s = 30s".
+
 Each shot must represent one clear visual moment.
+Each shot becomes ONE separate video clip.
 The storyboard must follow the script exactly.
 
 STORYBOARD GROUPS
@@ -1242,11 +1253,11 @@ STORYBOARD IMAGE LAYOUT
 - Every panel is a clean 9:16 vertical picture of that shot.
 - NOTHING is written on the pictures themselves.
 - Under each panel, a thin dark strip holds ONE line only:
-  [shot number] · [SAYS / VO / BG]: "[exact words]"
-  Example: 3 · SAYS: "okay so this changed my mornings"
-  A shot with no audio has only its shot number.
-- No other text anywhere in the image: no titles, durations,
-  camera notes, arrows, labels or captions.
+  [shot number] · [seconds]s · [SAYS / VO / BG]: "[exact words]"
+  Example: 3 · 4s · SAYS: "okay so this changed my mornings"
+  A shot with no audio has only its shot number and seconds.
+- No other text anywhere in the image: no titles, camera notes,
+  arrows, labels or captions.
 
 Use the locked character, product and location in every panel.
 Show the actual UGC ad progression, filmed from smartphone
@@ -1299,6 +1310,7 @@ STORY:
 - Correct sequence across all storyboards
 - Hook in first 1–3 seconds
 - Correct spoken lines and SAYS / VO / BG tags in the strips
+- Correct seconds in every strip, adding up to the selected duration
 - Correct product usage
 - Correct CTA ending
 
@@ -1318,14 +1330,22 @@ STAGE 11 — FLOW AGENT PROMPTS
 
 Flow Agent plans each clip and writes its own video prompts from
 the storyboard and the reference images. Keep the prompt SHORT.
-Do NOT add scene descriptions, dialogue, style lists or rules.
+Do NOT add scene descriptions, style lists or rules.
 
 Give ONE prompt per storyboard, each in its own code block,
 titled "FLOW PROMPT — PART [X] OF [N]" (Storyboard X).
 
+The only thing you fill in is [SHOT LIST]: one line per shot in
+that storyboard, copied exactly from the approved storyboard plan:
+Shot [number] · [seconds]s · [SAYS / VO / BG]: "[exact words]"
+A shot with no audio: Shot [number] · [seconds]s
+
 Copy this template WORD FOR WORD:
 
 Make a 9:16 vertical smartphone UGC video from @storyboard.
+Make one separate clip for every shot below, in order. Never merge shots into one clip.
+Each clip is exactly the length shown for its shot:
+[SHOT LIST]
 Keep the person, product and place exactly as in @character @product @location.
 Follow the storyboard panel by panel. The strip under each panel is instructions only, never show it.
 SAYS = speaks on camera. VO = their voice, mouth not shown. BG = background voices or sounds only.
@@ -1434,12 +1454,14 @@ The complete workflow must be:
 
 15. Write UGC Ad Script (hook in first 1–3s + SAYS / VO / BG tags +
     soft CTA, no on-screen text) → user approves → STOP
-16. Create Storyboard Plan in text/table with storyboard groups of
-    up to 6 shots → user approves → STOP
+16. Create Storyboard Plan in text/table with exact seconds per
+    shot (adding up to the duration) and storyboard groups of up
+    to 6 shots → user approves → STOP
 17. Create Storyboard 1 → user approves or replies Next → create
     the next storyboard → repeat until the last one is approved
 18. Perform Final Consistency Check → show report → ask permission
-19. Give one short Flow Agent prompt per storyboard
+19. Give one short Flow Agent prompt per storyboard, with its shot
+    list (one clip per shot, exact seconds)
 
 ═══════════════════════════════════════════
 SIDE-CHAT BRIEF TEMPLATES
@@ -1652,8 +1674,10 @@ const DEMO_BD=[["Bangladeshi (Bengali)","The majority look in Bangladesh."],["Ba
 const TRAD=["Traditional (saree / salwar kameez / panjabi)","Bangladeshi traditional wear. Describe the exact outfit below if you like."];
 const DEF_BD={...DEF,age:"25–34",demo:"Bangladeshi (Bengali)",skin:"Light-Medium",under:"Warm",eyes:"Dark Brown",hairC:"Black",hairS:"Long",hairX:"Long straight black hair, loosely tied back",body:"Average",outfit:TRAD[0],outfitX:"Soft pastel cotton salwar kameez",pers:["Friendly","Relatable","Warm"]};
 const LANGS={
- banglish:{l:"Banglish",d:"Everyday Bangla mixed with English words, the way most Dhaka creators talk. Recommended.",long:"casual Banglish (everyday Bangla mixed with common English words, the way Dhaka creators talk)",short:"Banglish (everyday Bangla mixed with common English words)"},
- bangla:{l:"Bangla",d:"Fully in Bangla. Test one short clip first: AI lip-sync may be weaker in Bangla.",long:"natural spoken Bangla",short:"spoken Bangla"},
+ banglish:{l:"Banglish",d:"Everyday Bangla mixed with English words, the way most Dhaka creators talk. Bangla words are written in Bangla script so the voice says them right. Recommended.",long:"casual Banglish (everyday Bangla mixed with common English words, the way Dhaka creators talk)",short:"Banglish (everyday Bangla mixed with common English words)",
+  rule:"- SPELLING RULE: write every Bangla word in Bangla script and every\n  English word in English letters. NEVER write Bangla words in English\n  letters: the video voice reads them as English (\"hole\" is said as the\n  English word, not হলে). Example: \"আমি এটা দুই সপ্তাহ ধরে use করছি,\n  honestly অনেক ভালো।\" Keep this exact spelling in the storyboard\n  strips and the Flow prompts."},
+ bangla:{l:"Bangla",d:"Fully in Bangla script. Test one short clip first: AI lip-sync may be weaker in Bangla.",long:"natural spoken Bangla",short:"spoken Bangla",
+  rule:"- SPELLING RULE: write every word in Bangla script. Only brand and\n  product names stay in English letters. NEVER write Bangla words in\n  English letters: the video voice reads them as English (\"hole\" is\n  said as the English word, not হলে). Keep this exact spelling in the\n  storyboard strips and the Flow prompts."},
  english:{l:"English",d:"English with natural Bangladeshi phrasing.",long:"English with natural Bangladeshi phrasing",short:"English with natural Bangladeshi phrasing"}
 };
 const DEMO_US_BLOCK=["White / European-American","Black / African-American","East Asian-American","South Asian-American","Latina / Hispanic-American","Middle Eastern-American","Southeast Asian-American","Native American","Pacific Islander-American","Mixed / Multiracial"].map(x=>"- "+x).join("\n");
@@ -1668,6 +1692,7 @@ function bdSwaps(){
    ["Settings, names and language","Use natural American settings, situations, names, and modern casual\nAmerican English — the way real creators actually talk.","Use natural Bangladeshi settings, situations, names, and\n"+L.long+" — the way real creators actually talk."],
    ["Script language","- Use casual, conversational, contemporary American English —","- Use casual, conversational, contemporary "+L.short+" —"]
   ];
+  if(L.rule)s.push(["Bangla spelling","- Sentences must be short and speakable.\n","- Sentences must be short and speakable.\n"+L.rule+"\n"]);
   return s;
 }
 function variant(){
@@ -1713,7 +1738,7 @@ const GATES={
  locationM:[{id:"l2",...LOCKQ(3,"LOCATION LOCKED 🔒","UGC Ad Concepts")}],
  script:[
   {id:"s1",q:"Is this script approved, or do you want changes?",when:"After the script. Read the words out loud: do they sound like a real person talking? Is the first line catchy? Each line is marked SAYS (on camera), VO (voice, mouth not shown) or BG (background).",yes:"Yes, the script is approved."},
-  {id:"s2",q:"Is this storyboard plan approved? Should I now create Storyboard 1?",when:"After the shot table. At the end it lists the storyboards, up to 6 shots each. Want different groups? Type them in the box.",yes:"Yes, the storyboard plan is approved. Please create Storyboard 1."},
+  {id:"s2",q:"Is this storyboard plan approved? Should I now create Storyboard 1?",when:"After the shot table. Every shot needs exact seconds (like 4s), and the total must match your chosen length. At the end it lists the storyboards, up to 6 shots each. Want different groups? Type them in the box.",yes:"Yes, the storyboard plan is approved. Please create Storyboard 1."},
   {id:"s3",q:"Approve Storyboard 1 of 2? Reply Next to create Storyboard 2.",when:"After each storyboard that is not the last one (the numbers change). Pictures must be clean; the only text is the one-line strip under each panel.",yes:"Next"},
   {id:"s5",q:"Approve Storyboard 2 of 2?",when:"After the last storyboard.",yes:"Yes, I approve this storyboard."},
   {id:"s4",q:"Consistency check passed. Should I create the Flow Agent prompts?",when:"After the consistency check report.",yes:"Yes, please create the Flow Agent prompts."}
@@ -1726,6 +1751,8 @@ const HELP=[
  {id:"h3",q:"It jumped ahead without asking",when:"It started the next stage before you said yes.",yes:"Stop. Follow RULE G4: go back to the current stage and wait for my confirmation before moving on.",noChg:true},
  {id:"h4",q:"It asked several questions at once",when:"",yes:"Follow RULE G5: ask only ONE question at a time.",noChg:true},
  {id:"h5",q:"Two images got merged into one",when:"For example, the location sheet has storyboard boxes in it.",yes:"This image mixes two assets. Regenerate ONLY the incorrect asset as its own separate image.",noChg:true},
+ {id:"h12",q:"The shots have no exact seconds",when:"The plan says \"about 3s\", leaves the length out, or the seconds don't add up to your chosen duration.",yes:"Follow the SHOT DURATION RULES: give every shot an exact length in whole seconds (2–8s), make them add up to the selected duration and show the total. Give me the storyboard plan again.",noChg:true},
+ {id:"h13",q:"Bangla words are written in English letters",when:"Bangladesh version only. Words like \"hole\" or \"kemon\" in English letters get said the English way in Flow.",yes:"Follow the SPELLING RULE: write every Bangla word in Bangla script and keep English words in English letters. Give it to me again with the same words.",noChg:true},
  {id:"h11",q:"Text got drawn on the storyboard pictures",when:"Titles, captions or notes on the pictures, or more than one line under a panel.",yes:"Follow the STORYBOARD IMAGE LAYOUT: nothing written on the pictures, and only one strip line under each panel. Regenerate this storyboard.",noChg:true},
  {id:"h6",q:"The product doesn't match your photo",when:"Wrong color, shape, logo or misspelled label. Send this in the product side chat.",yes:"The product does not match my photos. Keep the same shape, proportions, colors, logo and label text as my photos. Regenerate the Product Reference Sheet.",noChg:true},
  {id:"h7",q:"The character's face changed",when:"",yes:"The character's face changed. Keep the locked character identity exactly the same and regenerate this image.",noChg:true},
@@ -1739,6 +1766,7 @@ const ISSUES=[
  ["product","The product looks wrong","Wrong shape, color, logo or misspelled label."],
  ["place","The room or place changed","Different furniture, walls or lighting from the location sheet."],
  ["words","Wrong or cut-off words","The person says something different from the storyboard."],
+ ["length","Wrong length or shots merged","The clip isn't the seconds in the shot list, or several shots ended up in one clip."],
  ["lips","Mouth moves on the wrong lines","SAYS lines should show the mouth; VO lines should not."],
  ["cinema","Looks like a TV ad, not a phone video","Too polished, fancy camera moves, movie colors."],
  ["text","Subtitles or text appeared","Captions, words or the storyboard strip showed up in the video."],
@@ -1750,6 +1778,7 @@ const FIX={
  product:"The product does not match the product reference sheet. Regenerate only this clip and keep the product's shape, colors, logo and label text identical to the tagged product reference.",
  place:"The location does not match the location reference sheet. Regenerate only this clip in the same location as the tagged location reference.",
  words:"The spoken line does not match the storyboard. Regenerate only this clip and use the exact words from the strip under its storyboard panel.",
+ length:"This clip does not match the shot list. Regenerate it as one separate clip per shot, each exactly the length in seconds shown for that shot.",
  lips:"The lip movement is wrong. SAYS means the person speaks on camera with the mouth visible. VO means we hear their voice but the mouth is not shown. Regenerate only this clip following the tag under its storyboard panel.",
  cinema:"This clip looks like a TV commercial. Regenerate only this clip as authentic smartphone UGC: handheld phone camera with slight natural movement, natural light, no cinematic camera moves or color grading.",
  text:"This clip shows subtitles, captions or other text on screen. Regenerate only this clip with no text on screen. The strips under the storyboard panels are instructions only; never show them.",
@@ -1791,7 +1820,7 @@ const GLOSS=[
   ["Hook","The first 1–3 seconds. The line that stops people scrolling."],
   ["CTA (call to action)","The ending that tells viewers what to do, like \"link's in my bio\"."],
   ["Payoff","The satisfying result moment."],
-  ["Strip","The one line under each storyboard panel: shot number and spoken words. Flow reads it; it never appears in the video."],
+  ["Strip","The one line under each storyboard panel: shot number, seconds and spoken words. Flow reads it; it never appears in the video."],
   ["SAYS / VO / BG","SAYS: the person speaks on camera. VO: we hear their voice but don't see the mouth. BG: background voices or sounds only."],
   ["Side chat","A separate ChatGPT chat for one reference sheet only."],
   ["Handoff Card","A short text summary of an approved sheet. You paste it into the main chat with the sheet image."],
@@ -1951,10 +1980,10 @@ function brief(text,name,details){
   const b=`----- BEGIN ${name} BRIEF -----\n`,e=`\n----- END ${name} BRIEF -----`,i=text.indexOf(b),j=text.indexOf(e);
   return i<0||j<0?"":text.slice(i+b.length,j).replace("[DETAILS]",details);
 }
-function flowPrompts(){
-  const a="Copy this template WORD FOR WORD:\n\n",b="\n\nFor PART 2 and later, add this as the first line:\n",i=master.indexOf(a),j=master.indexOf(b);
+function flowPrompts(text){
+  const a="Copy this template WORD FOR WORD:\n\n",b="\n\nFor PART 2 and later, add this as the first line:\n",i=text.indexOf(a),j=text.indexOf(b);
   if(i<0||j<0)return ["",""];
-  const t=master.slice(i+a.length,j),first=master.slice(j+b.length).split("\n")[0];
+  const t=text.slice(i+a.length,j),first=text.slice(j+b.length).split("\n")[0];
   return [t,first+"\n"+t];
 }
 const ret=(what,card)=>`Here is my approved ${what} (image attached) and the ${card}:\n\n[paste the card here]`;
@@ -1987,7 +2016,7 @@ function build(){
   $("retChar").textContent=ret("Character Reference Sheet","Character Handoff Card");
   $("retProduct").textContent=ret("Product Reference Sheet","Product Handoff Card");
   $("retLocation").textContent=ret("Location Reference Sheet","Location Handoff Card");
-  const [f1,f2]=flowPrompts();$("flowP1").textContent=f1;$("flowP2").textContent=f2;
+  const [f1,f2]=flowPrompts(V.text);$("flowP1").textContent=f1;$("flowP2").textContent=f2;
   $("locationTip").innerHTML=S.location==="YES"?"<b>Next:</b> upload your location photo in the side chat. ChatGPT keeps the same room, furniture and layout.":`ChatGPT designs the place itself. It picks a lived-in, everyday ${BD?"Bangladeshi":"American"} location (bedroom, bathroom, kitchen, car…) with natural light.`;
   [...Object.values(GATES).flat(),...HELP].forEach(g=>{const el=$("gp-"+g.id);if(el)el.textContent=gateText(g)});
   const extra=S.issueExtra.trim();
